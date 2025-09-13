@@ -271,15 +271,14 @@ std::stringstream Shader::ProcessIncludes(const std::string& filepath) const
 		if (line.find("#include") != std::string::npos)
 		{
 			std::string FilePathBuffer;
-			char c;
-			for (int i = line.find('"'); i < line.length(); i++)
+			char c = ' ';
+			for (int i = line.find('"') + 1; i < line.length(); i++)
 			{
 				c = line.at(i);
+				if (c == '"')
+					break;
 
-				if (c != '"')
-				{
-					FilePathBuffer.push_back(c);
-				}
+				FilePathBuffer.push_back(c);
 			}
 			
 			ss << ProcessIncludes(FilePathBuffer).str() << '\n';
