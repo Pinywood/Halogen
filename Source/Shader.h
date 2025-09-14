@@ -104,7 +104,6 @@ public:
 	void SetMat3(const std::string& name, const glm::mat3& matrix);
 	void SetMat4(const std::string& name, const glm::mat4& matrix);
 
-	std::unordered_map<std::string, Uniform>::const_iterator CheckUniformError(const std::string& name, const glslType& Type);
 
 	template<typename T>
 	void SetUniform(const std::string& name, const T& value);
@@ -115,4 +114,7 @@ private:
 	std::stringstream PreProcess(const std::string& filepath) const;
 	int CompileShader(unsigned int type, const std::string& source);
 	void SetUniformLocations();
+
+	template<typename ...argTypes>
+	int SetUniformTemplate(const std::string& name, const glslType& Type, std::function<void(int, argTypes...)> glFunc, argTypes ...args);
 };

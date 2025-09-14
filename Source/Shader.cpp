@@ -90,79 +90,68 @@ void Shader::SetUniform(const std::string& name, const T& value)
 	std::println("Attempted to set uniform to invalid type");
 }
 
-std::unordered_map<std::string, Uniform>::const_iterator Shader::CheckUniformError(const std::string& name, const glslType& Type)
+template<typename... argTypes>
+int Shader::SetUniformTemplate(const std::string& name, const glslType& Type, std::function<void(int, argTypes...)> glFunc, argTypes... args)
 {
 	const auto& found = m_UniformMap.find(name);
 
 	if (found == m_UniformMap.end())
 	{
 		std::println("Attempted to set uniform '{}', no such uniform exists", name);
-		return found;
+		return -1;
 	}
 
 	if (found->second.Type != Type)
 	{
 		std::println("Attempted to set uniform '{}' to type {} should be {}", name, Type, found->second.Type);
-		return found;
+		return -2;
 	}
 
-	return found;
+	Use();
+	glFunc(found->second.Location, args...);
+	return 0;
 }
 
 template<>
 void Shader::SetUniform<int>(const std::string& name, const int& value)
 {
-	const auto& found = CheckUniformError(name, glslType::glslInt);
-	Use();
-	glUniform1i(found->second.Location, value);
+	SetUniformTemplate(name, glslType::glslInt, std::function(glUniform1i), value);
 }
 
 template<>
 void Shader::SetUniform<float>(const std::string& name, const float& value)
 {
-	const auto& found = CheckUniformError(name, glslType::glslFloat);
-	Use();
-	glUniform1f(found->second.Location, value);
+	SetUniformTemplate(name, glslType::glslFloat, std::function(glUniform1f), value);
 }
 
 template<>
 void Shader::SetUniform<double>(const std::string& name, const double& value)
 {
-	const auto& found = CheckUniformError(name, glslType::glslFloat);
-	Use();
-	glUniform1f(found->second.Location, value);
+	SetUniformTemplate(name, glslType::glslFloat, std::function(glUniform1f), (float)value);
 }
 
 template<>
 void Shader::SetUniform<Vec2>(const std::string& name, const Vec2& value)
 {
-	const auto& found = CheckUniformError(name, glslType::glslVec2);
-	Use();
-	glUniform2f(found->second.Location, value.x, value.y);
+	SetUniformTemplate(name, glslType::glslVec2, std::function(glUniform2f), value.x, value.y);
 }
 
 template<>
 void Shader::SetUniform<Vec3>(const std::string& name, const Vec3& value)
 {
-	const auto& found = CheckUniformError(name, glslType::glslVec3);
-	Use();
-	glUniform3f(found->second.Location, value.x, value.y, value.z);
+	SetUniformTemplate(name, glslType::glslVec3, std::function(glUniform3f), value.x, value.y, value.z);
 }
 
 template<>
 void Shader::SetUniform<glm::mat3>(const std::string& name, const glm::mat3& value)
 {
-	const auto& found = CheckUniformError(name, glslType::glslMat3);
-	Use();
-	glUniformMatrix3fv(found->second.Location, 1, GL_FALSE, glm::value_ptr(value));
+	SetUniformTemplate(name, glslType::glslMat3, std::function(glUniformMatrix3fv), 1, (GLboolean)GL_FALSE, glm::value_ptr(value));
 }
 
 template<>
 void Shader::SetUniform<glm::mat4>(const std::string& name, const glm::mat4& value)
 {
-	const auto& found = CheckUniformError(name, glslType::glslMat4);
-	Use();
-	glUniformMatrix4fv(found->second.Location, 1, GL_FALSE, glm::value_ptr(value));
+	SetUniformTemplate(name, glslType::glslMat4, std::function(glUniformMatrix4fv), 1, (GLboolean)GL_FALSE, glm::value_ptr(value));
 }
 
 std::tuple<std::string, std::string> Shader::ParseShader(std::stringstream& stream)
