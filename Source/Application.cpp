@@ -6,9 +6,11 @@
 #include "VertexBufferLayout.h"
 #include "VertexArray.h"
 #include "Shader.h"
+#include "Renderer.h"
 #include "Ray Tracer.h"
 #include "Model.h"
 #include "Camera.h"
+#include "Framebuffer.h"
 
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
@@ -20,7 +22,11 @@
 Camera camera;
 float speed = 1.0;
 
-float AspectRatio = 1.0;
+int WindowWidth = 900;
+int WindowHeight = 900;
+
+int sample = 0;
+float AspectRatio = (float)WindowWidth / (float)WindowHeight;
 float deltaTime;
 float prevTime = 0.0;
 float currentTime;
@@ -31,8 +37,12 @@ bool FirstMouse = true;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-	glViewport(0, 0, width, height);
-	AspectRatio = (double)width / (double)height;
+	WindowWidth = width;
+	WindowHeight = height;
+	glViewport(0, 0, WindowWidth, WindowHeight);
+	AspectRatio = (double)WindowWidth / (double)WindowHeight;
+
+	sample = 0;
 }
 
 void ProcessInput(GLFWwindow* window)
@@ -42,14 +52,16 @@ void ProcessInput(GLFWwindow* window)
 
 	speed = 1.5;
 
-	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+	if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		speed *= 2.0;
 
-	camera.Move(window, deltaTime * speed);
+	if (camera.Move(window, deltaTime * speed))
+		sample = 0;
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
+	sample = 0;
 	if (FirstMouse)
 	{
 		LastX = xpos;
@@ -72,9 +84,6 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	int WindowWidth = 900;
-	int WindowHeight = 900;
-
 	GLFWwindow* window = glfwCreateWindow(WindowWidth, WindowHeight, "Bombombini Windolini", NULL, NULL);
 	if (window == nullptr)
 	{
@@ -92,6 +101,30 @@ int main()
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetCursorPosCallback(window, mouse_callback);
 
+	float Vertices[] =
+	{				   //Tex Coords
+		-1.0f, -1.0f,	0.0, 0.0,
+		 1.0f, -1.0f,	1.0, 0.0,
+		 1.0f,  1.0f,	1.0, 1.0,
+		-1.0f,  1.0f,	0.0, 1.0
+	};
+
+	unsigned int Indices[6] =
+	{
+		0, 1, 2,
+		2, 3, 0
+	};
+	VertexBufferLayout WindowBufferLayout;
+
+	VertexBuffer WindowVB(Vertices, sizeof(Vertices));
+	IndexBuffer WindowIB(Indices, 6);
+	VertexArray WindowVA;
+
+	WindowBufferLayout.Push<float>(2);
+	WindowBufferLayout.Push<float>(2);
+	WindowVA.AddBuffer(WindowVB, WindowBufferLayout);
+	WindowIB.Bind();
+
 	RayTracer RayTracer;
 
 	Sphere Sphere1;
@@ -106,7 +139,7 @@ int main()
 	Sphere1.Radius = 1.0;
 
 	Sphere2.material.BaseColor = Vec3(0.6);
-	Sphere2.material.Roughness = 1.0;
+	Sphere2.material.Roughness = 0.8;
 	Sphere2.material.Emission = 0.0;
 	Sphere2.Position = Vec3(0.0, -1001.0, 0.0);
 	Sphere2.Radius = 1000.0;
@@ -128,33 +161,56 @@ int main()
 	RayTracer.AddToBuffer(Sphere3);
 	RayTracer.AddToBuffer(Sphere4);
 
-	RayTracer.shader.SetUniform("samples", 200);
-	RayTracer.shader.SetUniform("max_bounces", 10);
-	RayTracer.shader.SetUniform("exposure", 0.28);
-	RayTracer.shader.SetUniform("gamma", 2.2);
+	RayTracer.shader.SetUniform("max_bounces", 20);
+
+	Renderer renderer;
+
+	Shader Accumulator("res/Accumulator.glsl");
+	Shader Display("res/Display.glsl");
+	Display.SetUniform("exposure", 0.15);
+	Display.SetUniform("gamma", 2.2);
+
+	Framebuffer AccumulationFB(WindowWidth, WindowHeight);
+	Framebuffer CurrentSampleFB(WindowWidth, WindowHeight);
 
 	while (!glfwWindowShouldClose(window))
 	{
 		ProcessInput(window);
 		glfwPollEvents();
 
+		AccumulationFB.ReSize(WindowWidth, WindowHeight);
+		CurrentSampleFB.ReSize(WindowWidth, WindowHeight);
+
 		currentTime = glfwGetTime();
 		deltaTime = currentTime - prevTime;
 		prevTime = currentTime;
 
+		CurrentSampleFB.Bind(0);
 		RayTracer.Clear();
 
+		RayTracer.shader.SetUniform("CurrentSample", sample);
 		RayTracer.shader.SetUniform("AspectRatio", AspectRatio);
 		RayTracer.shader.SetUniform("View", camera.GetViewMatrix());
 		RayTracer.shader.SetUniform("CameraPos", Vec3(camera.Position.x, camera.Position.y, camera.Position.z));
 
-		Sphere1.Position = Vec3(0.0, (1 + cos(2 * currentTime)) * 0.5, 0.0);
-
-		RayTracer.SwapBufferObject(0, Sphere1);
-
 		RayTracer.Render();
 
+		AccumulationFB.Bind(1);
+		Accumulator.SetUniform("CurrentSampleImage", 0);
+		Accumulator.SetUniform("Accumulated", 1);
+		Accumulator.SetUniform("CurrentSample", (float)sample);
+
+		if (sample == 0)
+			renderer.Clear(0.0, 0.0, 0.0);
+
+		renderer.Draw(WindowVA, 6, Accumulator);
+
+		AccumulationFB.UnBind();
+		Display.SetUniform("Accumulated", 1);
+		renderer.Draw(WindowVA, 6, Display);
+
 		glfwSwapBuffers(window);
+		sample++;
 	}
 
 	glfwTerminate();

@@ -133,6 +133,7 @@
   <ItemGroup>
     <ClCompile Include="Source\Application.cpp" />
     <ClCompile Include="Source\Camera.cpp" />
+    <ClCompile Include="Source\Framebuffer.cpp" />
     <ClCompile Include="Source\IndexBuffer.cpp" />
     <ClCompile Include="Source\Ray Tracer.cpp" />
     <ClCompile Include="Source\Renderer.cpp" />
@@ -144,6 +145,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Camera.h" />
+    <ClInclude Include="Source\Framebuffer.h" />
     <ClInclude Include="Source\IndexBuffer.h" />
     <ClInclude Include="Source\Model.h" />
     <ClInclude Include="Source\Ray Tracer.h" />
@@ -155,6 +157,8 @@
     <ClInclude Include="Source\VertexBufferLayout.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="res\Accumulator.glsl" />
+    <None Include="res\Display.glsl" />
     <None Include="res\Model.glsl" />
     <None Include="res\PRNG.glsl" />
     <None Include="res\Ray Trace.frag" />

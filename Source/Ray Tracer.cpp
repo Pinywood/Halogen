@@ -15,6 +15,7 @@ RayTracer::RayTracer()
 		0, 1, 2,
 		2, 3, 0
 	};
+	VertexBufferLayout WindowBufferLayout;
 
 	WindowVB.Load(Vertices, sizeof(Vertices));
 	WindowIB.Load(Indices, 6);

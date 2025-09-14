@@ -58,7 +58,7 @@ struct std::formatter<glslType> : std::formatter<std::string>
 	}
 };
 
-const std::unordered_map<std::string, glslType> glslTypeMap = 
+const std::unordered_map<std::string, glslType> glslTypeMap =
 {
 	std::pair("int", glslType::glslInt),
 	std::pair("float", glslType::glslFloat),
@@ -67,6 +67,7 @@ const std::unordered_map<std::string, glslType> glslTypeMap =
 	std::pair("vec4", glslType::glslVec4),
 	std::pair("mat3", glslType::glslMat3),
 	std::pair("mat4", glslType::glslMat4),
+	std::pair("sampler2D", glslType::glslInt)
 };
 
 struct Uniform

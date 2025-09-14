@@ -7,37 +7,46 @@ glm::mat3 Camera::GetViewMatrix()
     return View;
 }
 
-void Camera::Move(GLFWwindow* window, float distance)
+bool Camera::Move(GLFWwindow* window, float distance)
 {
+    bool moved = false;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     {
+        moved = true;
         Position += distance * Front;
     }
 
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
     {
+        moved = true;
         Position -= Right * distance;
     }
 
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
     {
+        moved = true;
         Position -= distance * Front;
     }
 
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     {
+        moved = true;
         Position += Right * distance;
     }
 
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
     {
+        moved = true;
         Position += distance * Up;
     }
 
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
     {
+        moved = true;
         Position -= distance * Up;
     }
+
+    return moved;
 }
 
 void Camera::Turn(float xoffset, float yoffset, GLboolean constrainPitch)

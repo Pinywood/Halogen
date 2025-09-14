@@ -25,7 +25,6 @@ public:
 
 private:
 	VertexBuffer WindowVB;
-	VertexBufferLayout WindowBufferLayout;
 	IndexBuffer WindowIB;
 	VertexArray WindowVA;
 

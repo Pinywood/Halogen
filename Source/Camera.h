@@ -37,7 +37,7 @@ public:
     }
 
     glm::mat3 GetViewMatrix();
-    void Move(GLFWwindow* window, float distance);
+    bool Move(GLFWwindow* window, float distance);
     void Turn(float xoffset, float yoffset, GLboolean constrainPitch = true);
 
 private:

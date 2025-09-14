@@ -45,6 +45,9 @@
     <ClCompile Include="Source\VertexBufferLayout.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Framebuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Camera.h">
@@ -77,6 +80,9 @@
     <ClInclude Include="Source\VertexBufferLayout.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Framebuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\Model.glsl" />
@@ -85,5 +91,7 @@
     <None Include="res\Ray Trace.glsl" />
     <None Include="res\Ray Trace.vert" />
     <None Include="res\Ray.glsl" />
+    <None Include="res\Accumulator.glsl" />
+    <None Include="res\Display.glsl" />
   </ItemGroup>
 </Project>
