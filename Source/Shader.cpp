@@ -109,6 +109,7 @@ int Shader::SetUniformTemplate(const std::string& name, const glslType& Type, st
 
 	Use();
 	glFunc(found->second.Location, args...);
+	found->second.Set = true;
 	return 0;
 }
 
@@ -152,6 +153,16 @@ template<>
 void Shader::SetUniform<glm::mat4>(const std::string& name, const glm::mat4& value)
 {
 	SetUniformTemplate(name, glslType::glslMat4, std::function(glUniformMatrix4fv), 1, (GLboolean)GL_FALSE, glm::value_ptr(value));
+}
+
+std::unordered_map<std::string, Uniform> Shader::GetUniformMap() const
+{
+	return m_UniformMap;
+}
+
+bool Shader::CheckUniformStatus(const std::string& name) const
+{
+	return m_UniformMap.at(name).Set;
 }
 
 std::tuple<std::string, std::string> Shader::ParseShader(std::stringstream& stream)

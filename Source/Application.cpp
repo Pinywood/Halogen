@@ -173,6 +173,13 @@ int main()
 	Framebuffer AccumulationFB(WindowWidth, WindowHeight);
 	Framebuffer CurrentSampleFB(WindowWidth, WindowHeight);
 
+	const int CurrentSampleTexSlot = 0;
+	const int AccumulatedTexSlot = 1;
+
+	Accumulator.SetUniform("CurrentSampleImage", CurrentSampleTexSlot);
+	Accumulator.SetUniform("Accumulated", AccumulatedTexSlot);
+	Display.SetUniform("Accumulated", AccumulatedTexSlot);
+
 	while (!glfwWindowShouldClose(window))
 	{
 		ProcessInput(window);
@@ -185,7 +192,7 @@ int main()
 		deltaTime = currentTime - prevTime;
 		prevTime = currentTime;
 
-		CurrentSampleFB.Bind(0);
+		CurrentSampleFB.Bind(CurrentSampleTexSlot);
 		RayTracer.Clear();
 
 		RayTracer.shader.SetUniform("CurrentSample", sample);
@@ -195,9 +202,7 @@ int main()
 
 		RayTracer.Render();
 
-		AccumulationFB.Bind(1);
-		Accumulator.SetUniform("CurrentSampleImage", 0);
-		Accumulator.SetUniform("Accumulated", 1);
+		AccumulationFB.Bind(AccumulatedTexSlot);
 		Accumulator.SetUniform("CurrentSample", (float)sample);
 
 		if (sample == 0)
@@ -206,7 +211,6 @@ int main()
 		renderer.Draw(WindowVA, 6, Accumulator);
 
 		AccumulationFB.UnBind();
-		Display.SetUniform("Accumulated", 1);
 		renderer.Draw(WindowVA, 6, Display);
 
 		glfwSwapBuffers(window);

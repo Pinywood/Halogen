@@ -72,6 +72,13 @@ void RayTracer::Render() const
 
 	WindowVA.Bind();
 	shader.Use();
+
+	for (auto& [name, uniform] : shader.GetUniformMap())
+	{
+		if (!shader.CheckUniformStatus(name) && name != "SphereList")
+			std::println("Uniform {} is not set", name);
+	}
+
 	glDrawElements(GL_TRIANGLES, WindowIB.GetCount(), GL_UNSIGNED_INT, nullptr);
 }
 

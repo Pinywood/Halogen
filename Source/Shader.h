@@ -75,6 +75,7 @@ struct Uniform
 	int Location;
 	glslType Type;
 	bool Is_Array = false;
+	bool Set = false;
 };
 
 struct glslStruct
@@ -105,6 +106,8 @@ public:
 	void SetMat3(const std::string& name, const glm::mat3& matrix);
 	void SetMat4(const std::string& name, const glm::mat4& matrix);
 
+	std::unordered_map<std::string, Uniform> GetUniformMap() const;
+	bool CheckUniformStatus(const std::string& name) const;
 
 	template<typename T>
 	void SetUniform(const std::string& name, const T& value);

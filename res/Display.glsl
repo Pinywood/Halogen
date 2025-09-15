@@ -24,9 +24,10 @@ out vec4 FragmentColor;
 
 vec4 ToneMapper(in vec4 color)
 {
-	float alpha = 6.0;
+	float alpha = 5.0;
+	float beta = 2.0;
 	color = pow(color, vec4(alpha));
-	color = color / (color + vec4(vec3(1.0), 0.0));
+	color = color / (color + vec4(vec3(beta), 0.0));
 	return color;
 }
 
