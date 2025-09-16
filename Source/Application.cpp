@@ -161,8 +161,6 @@ int main()
 	RayTracer.AddToBuffer(Sphere3);
 	RayTracer.AddToBuffer(Sphere4);
 
-	RayTracer.shader.SetUniform("max_bounces", 20);
-
 	Renderer renderer;
 
 	Shader Accumulator("res/Accumulator.glsl");
@@ -180,6 +178,8 @@ int main()
 	Accumulator.SetUniform("Accumulated", AccumulatedTexSlot);
 	Display.SetUniform("Accumulated", AccumulatedTexSlot);
 
+	RayTracer.SetUniform("max_bounces", 20);
+
 	while (!glfwWindowShouldClose(window))
 	{
 		ProcessInput(window);
@@ -195,10 +195,10 @@ int main()
 		CurrentSampleFB.Bind(CurrentSampleTexSlot);
 		RayTracer.Clear();
 
-		RayTracer.shader.SetUniform("CurrentSample", sample);
-		RayTracer.shader.SetUniform("AspectRatio", AspectRatio);
-		RayTracer.shader.SetUniform("View", camera.GetViewMatrix());
-		RayTracer.shader.SetUniform("CameraPos", Vec3(camera.Position.x, camera.Position.y, camera.Position.z));
+		RayTracer.SetUniform("CurrentSample", sample);
+		RayTracer.SetUniform("AspectRatio", AspectRatio);
+		RayTracer.SetUniform("View", camera.GetViewMatrix());
+		RayTracer.SetUniform("CameraPos", Vec3(camera.Position.x, camera.Position.y, camera.Position.z));
 
 		RayTracer.Render();
 

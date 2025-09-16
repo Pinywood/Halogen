@@ -84,12 +84,6 @@ void Shader::SetMat4(const std::string& name, const glm::mat4& matrix)
 	glUniformMatrix4fv(glGetUniformLocation(m_RendererID, name.c_str()), 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
-template<typename T>
-void Shader::SetUniform(const std::string& name, const T& value)
-{
-	std::println("Attempted to set uniform to invalid type");
-}
-
 template<typename... argTypes>
 int Shader::SetUniformTemplate(const std::string& name, const glslType& Type, std::function<void(int, argTypes...)> glFunc, argTypes... args)
 {
@@ -113,44 +107,38 @@ int Shader::SetUniformTemplate(const std::string& name, const glslType& Type, st
 	return 0;
 }
 
-template<>
-void Shader::SetUniform<int>(const std::string& name, const int& value)
+void Shader::SetUniform(const std::string& name, const int& value)
 {
 	SetUniformTemplate(name, glslType::glslInt, std::function(glUniform1i), value);
 }
 
-template<>
-void Shader::SetUniform<float>(const std::string& name, const float& value)
+void Shader::SetUniform(const std::string& name, const float& value)
 {
 	SetUniformTemplate(name, glslType::glslFloat, std::function(glUniform1f), value);
 }
 
-template<>
-void Shader::SetUniform<double>(const std::string& name, const double& value)
+void Shader::SetUniform(const std::string& name, const double& value)
 {
 	SetUniformTemplate(name, glslType::glslFloat, std::function(glUniform1f), (float)value);
 }
 
-template<>
-void Shader::SetUniform<Vec2>(const std::string& name, const Vec2& value)
+void Shader::SetUniform(const std::string& name, const Vec2& value)
 {
 	SetUniformTemplate(name, glslType::glslVec2, std::function(glUniform2f), value.x, value.y);
 }
 
-template<>
-void Shader::SetUniform<Vec3>(const std::string& name, const Vec3& value)
+void Shader::SetUniform(const std::string& name, const Vec3& value)
 {
 	SetUniformTemplate(name, glslType::glslVec3, std::function(glUniform3f), value.x, value.y, value.z);
 }
 
-template<>
-void Shader::SetUniform<glm::mat3>(const std::string& name, const glm::mat3& value)
+void Shader::SetUniform(const std::string& name, const glm::mat3& value)
 {
 	SetUniformTemplate(name, glslType::glslMat3, std::function(glUniformMatrix3fv), 1, (GLboolean)GL_FALSE, glm::value_ptr(value));
 }
 
-template<>
-void Shader::SetUniform<glm::mat4>(const std::string& name, const glm::mat4& value)
+
+void Shader::SetUniform(const std::string& name, const glm::mat4& value)
 {
 	SetUniformTemplate(name, glslType::glslMat4, std::function(glUniformMatrix4fv), 1, (GLboolean)GL_FALSE, glm::value_ptr(value));
 }

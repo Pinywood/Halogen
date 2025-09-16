@@ -52,7 +52,6 @@ void RayTracer::Clear(const float& Red, const float& Green, const float& Blue) c
 	glClear(GL_COLOR_BUFFER_BIT);
 }
 
-
 void RayTracer::Render() const
 {
 	for (int i = 0; i < m_SphereList.size(); i++)

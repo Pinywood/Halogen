@@ -106,11 +106,16 @@ public:
 	void SetMat3(const std::string& name, const glm::mat3& matrix);
 	void SetMat4(const std::string& name, const glm::mat4& matrix);
 
+	void SetUniform(const std::string& name, const int& value);
+	void SetUniform(const std::string& name, const float& value);
+	void SetUniform(const std::string& name, const double& value);
+	void SetUniform(const std::string& name, const Vec2& value);
+	void SetUniform(const std::string& name, const Vec3& value);
+	void SetUniform(const std::string& name, const glm::mat3& value);
+	void SetUniform(const std::string& name, const glm::mat4& value);
+
 	std::unordered_map<std::string, Uniform> GetUniformMap() const;
 	bool CheckUniformStatus(const std::string& name) const;
-
-	template<typename T>
-	void SetUniform(const std::string& name, const T& value);
 
 private:
 	std::tuple<std::string, std::string> ParseShader(std::stringstream& stream);
