@@ -77,7 +77,7 @@
       <PreprocessorDefinitions>GLEW_STATIC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\Dependencies\GLEW_x86\include;$(ProjectDir)..\Dependencies\GLFW_x86\include;$(ProjectDir)..\Dependencies\glm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\Dependencies\GLEW_x86\include;$(ProjectDir)..\Dependencies\GLFW_x86\include;$(ProjectDir)..\Dependencies\glm;$(ProjectDir)Source\Vendor</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -95,7 +95,7 @@
       <PreprocessorDefinitions>GLEW_STATIC;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\Dependencies\GLEW_x86\include;$(ProjectDir)..\Dependencies\GLFW_x86\include;$(ProjectDir)..\Dependencies\glm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\Dependencies\GLEW_x86\include;$(ProjectDir)..\Dependencies\GLFW_x86\include;$(ProjectDir)..\Dependencies\glm;$(ProjectDir)Source\Vendor</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -139,6 +139,13 @@
     <ClCompile Include="Source\Renderer.cpp" />
     <ClCompile Include="Source\Shader.cpp" />
     <ClCompile Include="Source\VectorMath.cpp" />
+    <ClCompile Include="Source\Vendor\ImGui\imgui.cpp" />
+    <ClCompile Include="Source\Vendor\ImGui\imgui_demo.cpp" />
+    <ClCompile Include="Source\Vendor\ImGui\imgui_draw.cpp" />
+    <ClCompile Include="Source\Vendor\ImGui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="Source\Vendor\ImGui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="Source\Vendor\ImGui\imgui_tables.cpp" />
+    <ClCompile Include="Source\Vendor\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="Source\VertexArray.cpp" />
     <ClCompile Include="Source\VertexBuffer.cpp" />
     <ClCompile Include="Source\VertexBufferLayout.cpp" />
@@ -152,6 +159,15 @@
     <ClInclude Include="Source\Renderer.h" />
     <ClInclude Include="Source\Shader.h" />
     <ClInclude Include="Source\VectorMath.h" />
+    <ClInclude Include="Source\Vendor\ImGui\imconfig.h" />
+    <ClInclude Include="Source\Vendor\ImGui\imgui.h" />
+    <ClInclude Include="Source\Vendor\ImGui\imgui_impl_glfw.h" />
+    <ClInclude Include="Source\Vendor\ImGui\imgui_impl_opengl3.h" />
+    <ClInclude Include="Source\Vendor\ImGui\imgui_impl_opengl3_loader.h" />
+    <ClInclude Include="Source\Vendor\ImGui\imgui_internal.h" />
+    <ClInclude Include="Source\Vendor\ImGui\imstb_rectpack.h" />
+    <ClInclude Include="Source\Vendor\ImGui\imstb_textedit.h" />
+    <ClInclude Include="Source\Vendor\ImGui\imstb_truetype.h" />
     <ClInclude Include="Source\VertexArray.h" />
     <ClInclude Include="Source\VertexBuffer.h" />
     <ClInclude Include="Source\VertexBufferLayout.h" />

@@ -1,6 +1,14 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include <ImGui/imgui.h>
+#include <ImGui/imgui_impl_glfw.h>
+#include <ImGui/imgui_impl_opengl3.h>
+
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
+
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "VertexBufferLayout.h"
@@ -12,18 +20,14 @@
 #include "Camera.h"
 #include "Framebuffer.h"
 
-#include <glm.hpp>
-#include <gtc/matrix_transform.hpp>
-#include <gtc/type_ptr.hpp>
-
-#include<iostream>
-#include<print>
+#include <iostream>
+#include <print>
 
 Camera camera;
 float speed = 1.0;
 
-int WindowWidth = 900;
-int WindowHeight = 900;
+int WindowWidth = 1600;
+int WindowHeight = 800;
 
 int sample = 0;
 float AspectRatio = (float)WindowWidth / (float)WindowHeight;
@@ -34,14 +38,15 @@ float currentTime;
 float LastX = 450;
 float LastY = 450;
 bool FirstMouse = true;
+bool TurnEnable = false;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	WindowWidth = width;
 	WindowHeight = height;
+	
 	glViewport(0, 0, WindowWidth, WindowHeight);
 	AspectRatio = (double)WindowWidth / (double)WindowHeight;
-
 	sample = 0;
 }
 
@@ -59,9 +64,14 @@ void ProcessInput(GLFWwindow* window)
 		sample = 0;
 }
 
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_E && action == GLFW_PRESS)
+		TurnEnable = !TurnEnable;
+}
+
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
-	sample = 0;
 	if (FirstMouse)
 	{
 		LastX = xpos;
@@ -74,7 +84,16 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	LastX = xpos;
 	LastY = ypos;
 
-	camera.Turn(xoffset, yoffset);
+	if (TurnEnable)
+	{
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		camera.Turn(xoffset, yoffset);
+		sample = 0;
+	}
+
+	else
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
 }
 
 int main()
@@ -96,10 +115,12 @@ int main()
 		std::cout << "GLEW ERROR" << std::endl;
 
 	glViewport(0, 0, WindowWidth, WindowHeight);
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetKeyCallback(window, key_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
+
+	glfwSwapInterval(1);
 
 	float Vertices[] =
 	{				   //Tex Coords
@@ -177,8 +198,26 @@ int main()
 	Accumulator.SetUniform("CurrentSampleImage", CurrentSampleTexSlot);
 	Accumulator.SetUniform("Accumulated", AccumulatedTexSlot);
 	Display.SetUniform("Accumulated", AccumulatedTexSlot);
+	
+	//ImGUI setup
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
+	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
-	RayTracer.SetUniform("max_bounces", 20);
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+
+	const char* glsl_version = "#version 330";
+	ImGui_ImplOpenGL3_Init(glsl_version);
+	//setup end
+
+	int max_bounces = 10;
+	float Sensor_Size = 100.0;
+	float Focal_Length = 50.0;
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -192,13 +231,59 @@ int main()
 		deltaTime = currentTime - prevTime;
 		prevTime = currentTime;
 
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
+		{
+			ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+			ImGui::Begin("Settings");
+
+			bool modified = false;
+
+			modified |= ImGui::SliderInt("Max Bounces", &max_bounces, 0, 30);
+			modified |= ImGui::SliderFloat("Sensor Size", &Sensor_Size, 35.0f, 150.0f);
+			modified |= ImGui::SliderFloat("Focal Length", &Focal_Length, 35.0f, 200.0f);
+			modified |= ImGui::SliderFloat("Sphere 1 Radius", &Sphere1.Radius, 0.0f, 1.0f);
+			modified |= ImGui::SliderFloat("Sphere 1 Roughness", &Sphere1.material.Roughness, 0.0f, 1.0f);
+			modified |= ImGui::SliderFloat("Sphere 2 Radius", &Sphere3.Radius, 0.0f, 1.0f);
+			modified |= ImGui::SliderFloat("Sphere 2 Roughness", &Sphere3.material.Roughness, 0.0f, 1.0f);
+			modified |= ImGui::SliderFloat("Sphere 3 Radius", &Sphere4.Radius, 0.0f, 1.0f);
+			modified |= ImGui::SliderFloat("Sphere 3 Roughness", &Sphere4.material.Roughness, 0.0f, 1.0f);
+
+			modified |= ImGui::ColorEdit3("Sphere 1 Color", (float*)&Sphere1.material.BaseColor);
+			modified |= ImGui::ColorEdit3("Sphere 2 Color", (float*)&Sphere3.material.BaseColor);
+			modified |= ImGui::ColorEdit3("Sphere 3 Color", (float*)&Sphere4.material.BaseColor);
+			modified |= ImGui::ColorEdit3("Ground Color", (float*)&Sphere2.material.BaseColor);
+			modified |= ImGui::SliderFloat("Ground Roughness", &Sphere2.material.Roughness, 0.0f, 1.0f);
+
+			if (modified)
+				sample = 0;
+
+			std::stringstream ss;
+			ss << "Samples: " << sample;
+
+			ImGui::Text(ss.str().c_str());
+
+			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+			ImGui::End();
+		}
+
 		CurrentSampleFB.Bind(CurrentSampleTexSlot);
 		RayTracer.Clear();
 
+		RayTracer.SetUniform("max_bounces", max_bounces);
 		RayTracer.SetUniform("CurrentSample", sample);
 		RayTracer.SetUniform("AspectRatio", AspectRatio);
+		RayTracer.SetUniform("u_Sensor_Size", Sensor_Size);
+		RayTracer.SetUniform("u_Focal_Length", Focal_Length);
 		RayTracer.SetUniform("View", camera.GetViewMatrix());
 		RayTracer.SetUniform("CameraPos", Vec3(camera.Position.x, camera.Position.y, camera.Position.z));
+
+		RayTracer.SwapBufferObject(0, Sphere1);
+		RayTracer.SwapBufferObject(1, Sphere2);
+		RayTracer.SwapBufferObject(2, Sphere3);
+		RayTracer.SwapBufferObject(3, Sphere4);
 
 		RayTracer.Render();
 
@@ -213,9 +298,23 @@ int main()
 		AccumulationFB.UnBind();
 		renderer.Draw(WindowVA, 6, Display);
 
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			GLFWwindow* backup_current_context = glfwGetCurrentContext();
+			ImGui::UpdatePlatformWindows();
+			ImGui::RenderPlatformWindowsDefault();
+			glfwMakeContextCurrent(backup_current_context);
+		}
+
 		glfwSwapBuffers(window);
 		sample++;
 	}
+
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
 
 	glfwTerminate();
 }

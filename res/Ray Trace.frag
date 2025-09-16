@@ -12,6 +12,9 @@ in vec3 WorldZ;
 in vec2 positions;
 in Sphere Spheres[ModelCount];
 
+in float Sensor_Size;
+in float Focal_Length;
+
 uniform float AspectRatio;
 uniform int CurrentSample;
 uniform int max_bounces;
@@ -20,9 +23,7 @@ out vec4 FragmentColor;
 
 void main()
 {
-	float FOV = 1.0;
-	float z_depth = 1.0/(2.0 * tan(FOV/2.0));
-	vec3 pixel_Position = vec3(positions.x * AspectRatio, positions.y, -z_depth);
+	vec3 pixel_Position = vec3(positions.x * AspectRatio * Sensor_Size, positions.y * Sensor_Size, -Focal_Length);
 
 	Ray TracingRay;
 
