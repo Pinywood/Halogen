@@ -233,6 +233,7 @@ std::tuple<std::string, std::string> Shader::ParseShader(std::stringstream& stre
 				else if (!TokenBuffer.empty())
 				{
 					m_UniformMap[TokenBuffer] = uniform;
+					break;
 				}
 
 				if (c == '[')

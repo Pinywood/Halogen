@@ -40,6 +40,8 @@ float LastY = 450;
 bool FirstMouse = true;
 bool TurnEnable = false;
 
+const float Pi = 3.141592653589;
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	WindowWidth = width;
@@ -217,7 +219,13 @@ int main()
 
 	int max_bounces = 10;
 	float Sensor_Size = 100.0;
-	float Focal_Length = 50.0;
+	float Focal_Length = 35.0;
+
+	float SunIntensity = 500.0;
+	float SunRadius = 0.8;
+	float SunAltitude = 30.0;
+	float SunAzimuthal = 0.0;
+	float SkyVariation = 0.2;
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -241,6 +249,11 @@ int main()
 
 			bool modified = false;
 
+			modified |= ImGui::SliderFloat("Sun Radius", &SunRadius, 0.0f, 50.0f);
+			modified |= ImGui::SliderFloat("Sun Intensity", &SunIntensity, 0.0f, 1000.0f);
+			modified |= ImGui::SliderFloat("Sun Altitude", &SunAltitude, -90.0, 90.0);
+			modified |= ImGui::SliderFloat("Sun Azimuthal", &SunAzimuthal, 0.0, 360.0);
+			modified |= ImGui::SliderFloat("Sky Variation", &SkyVariation, 0.0f, 1.0f);
 			modified |= ImGui::SliderInt("Max Bounces", &max_bounces, 0, 30);
 			modified |= ImGui::SliderFloat("Sensor Size", &Sensor_Size, 35.0f, 150.0f);
 			modified |= ImGui::SliderFloat("Focal Length", &Focal_Length, 35.0f, 200.0f);
@@ -272,9 +285,14 @@ int main()
 		CurrentSampleFB.Bind(CurrentSampleTexSlot);
 		RayTracer.Clear();
 
-		RayTracer.SetUniform("max_bounces", max_bounces);
 		RayTracer.SetUniform("CurrentSample", sample);
+		RayTracer.SetUniform("SunRadius", SunRadius / 200.0);
+		RayTracer.SetUniform("SunIntensity", SunIntensity);
+		RayTracer.SetUniform("SunAltitude", glm::radians(SunAltitude));
+		RayTracer.SetUniform("SunAzimuthal", glm::radians(SunAzimuthal));
+		RayTracer.SetUniform("SkyVariation", SkyVariation);
 		RayTracer.SetUniform("AspectRatio", AspectRatio);
+		RayTracer.SetUniform("max_bounces", max_bounces);
 		RayTracer.SetUniform("u_Sensor_Size", Sensor_Size);
 		RayTracer.SetUniform("u_Focal_Length", Focal_Length);
 		RayTracer.SetUniform("View", camera.GetViewMatrix());

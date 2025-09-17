@@ -1,3 +1,9 @@
+uniform float SunRadius;										//Should be in [0, 1], it is the cos of the angular radius
+uniform float SunIntensity;
+uniform float SunAltitude;
+uniform float SunAzimuthal;
+uniform float SkyVariation;
+
 struct Ray
 {
 	vec3 RayOrigin;
@@ -8,15 +14,14 @@ struct Ray
 void WorldColor(in vec3 direction, out vec4 color)
 {
 	direction = normalize(direction);
-	float SunHaloRadius = 1.0;									//Should be in [0, 1], it is the cos of the angular radius
-	vec3 SunHaloPos = normalize(WorldX + WorldY + WorldZ);
-	vec4 SunHaloColor = vec4(1.0, 1.0, 0.0, 1.0);
-	SunHaloColor *= vec4(vec3(4.0), 10.0);
-
-	float SunRadius = 0.002;									//Should be in [0, 1], it is the cos of the angular radius
-	vec3 SunPos = SunHaloPos;
+	vec3 SunPos = normalize(cos(SunAltitude) * sin(SunAzimuthal) * WorldX + sin(SunAltitude) * WorldY + cos(SunAltitude) * cos(SunAzimuthal) * WorldZ);
 	vec4 SunColor = vec4(1.0, 1.0, 0.6, 1.0);
-	SunColor *= vec4(vec3(1000.0), 1.0);
+	SunColor *= vec4(vec3(SunIntensity), 1.0);
+
+	vec3 SunHaloPos = SunPos;
+	vec4 SunHaloColor = vec4(1.0, 1.0, 0.2, 1.0);
+	SunHaloColor *= vec4(vec3(4.0), 1.0);
+	float SunHaloRadius = 1.0;								//Should be in [0, 1], it is the cos of the angular radius
 
 	float theta = dot(direction, WorldY);
 	float theta2 = dot(direction, SunHaloPos);
@@ -31,7 +36,10 @@ void WorldColor(in vec3 direction, out vec4 color)
 	else
 	{
 		theta = cos(theta);
-		color = vec4(theta - 0.3, theta - 0.3, theta, 1.0);
+		float R = (theta - 0.3) * SkyVariation + 0.7 * (1.0 - SkyVariation);
+		float G = R;
+		float B = theta * SkyVariation + 1.0 - SkyVariation;
+		color = vec4(R, G, B, 1.0);
 	}
 
 	
@@ -41,7 +49,7 @@ void WorldColor(in vec3 direction, out vec4 color)
 	color += SunHaloColor;
 
 	t = exp(-1.0 * (theta3 - 1.0) * (theta3 - 1.0)/ (SunRadius * SunRadius));
-	color = (SunColor - color) * sin(1.57 * t) + color;
+	color = (SunColor) * sin(1.57 * t) + color;
 }
 
 float HitPoint(in Ray ray, in Sphere sphere)
