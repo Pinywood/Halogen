@@ -188,7 +188,6 @@ int main()
 
 	Shader Accumulator("res/Accumulator.glsl");
 	Shader Display("res/Display.glsl");
-	Display.SetUniform("exposure", 0.15);
 	Display.SetUniform("gamma", 2.2);
 
 	Framebuffer AccumulationFB(WindowWidth, WindowHeight);
@@ -226,6 +225,7 @@ int main()
 	float SunAltitude = 30.0;
 	float SunAzimuthal = 0.0;
 	float SkyVariation = 0.2;
+	float exposure = 0.3;
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -270,8 +270,16 @@ int main()
 			modified |= ImGui::ColorEdit3("Ground Color", (float*)&Sphere2.material.BaseColor);
 			modified |= ImGui::SliderFloat("Ground Roughness", &Sphere2.material.Roughness, 0.0f, 1.0f);
 
+			ImGui::SliderFloat("Exposure", &exposure, 0.0, 1.0);
+
 			if (modified)
+			{
 				sample = 0;
+				RayTracer.SwapBufferObject(0, Sphere1);
+				RayTracer.SwapBufferObject(1, Sphere2);
+				RayTracer.SwapBufferObject(2, Sphere3);
+				RayTracer.SwapBufferObject(3, Sphere4);
+			}
 
 			std::stringstream ss;
 			ss << "Samples: " << sample;
@@ -285,23 +293,19 @@ int main()
 		CurrentSampleFB.Bind(CurrentSampleTexSlot);
 		RayTracer.Clear();
 
-		RayTracer.SetUniform("CurrentSample", sample);
-		RayTracer.SetUniform("SunRadius", SunRadius / 200.0);
-		RayTracer.SetUniform("SunIntensity", SunIntensity);
-		RayTracer.SetUniform("SunAltitude", glm::radians(SunAltitude));
-		RayTracer.SetUniform("SunAzimuthal", glm::radians(SunAzimuthal));
-		RayTracer.SetUniform("SkyVariation", SkyVariation);
-		RayTracer.SetUniform("AspectRatio", AspectRatio);
-		RayTracer.SetUniform("max_bounces", max_bounces);
-		RayTracer.SetUniform("u_Sensor_Size", Sensor_Size);
-		RayTracer.SetUniform("u_Focal_Length", Focal_Length);
-		RayTracer.SetUniform("View", camera.GetViewMatrix());
-		RayTracer.SetUniform("CameraPos", Vec3(camera.Position.x, camera.Position.y, camera.Position.z));
-
-		RayTracer.SwapBufferObject(0, Sphere1);
-		RayTracer.SwapBufferObject(1, Sphere2);
-		RayTracer.SwapBufferObject(2, Sphere3);
-		RayTracer.SwapBufferObject(3, Sphere4);
+		Display.SetUniform("exposure", exposure / 2.0);
+		RayTracer.Setting(RT_Setting::Current_Sample, sample);
+		RayTracer.Setting(RT_Setting::Sun_Radius, SunRadius / 200.0);
+		RayTracer.Setting(RT_Setting::Sun_Intensity, SunIntensity);
+		RayTracer.Setting(RT_Setting::Sun_Altitude, glm::radians(SunAltitude));
+		RayTracer.Setting(RT_Setting::Sun_Azimuthal, glm::radians(SunAzimuthal));
+		RayTracer.Setting(RT_Setting::Sky_Variation, SkyVariation);
+		RayTracer.Setting(RT_Setting::Aspect_Ratio, AspectRatio);
+		RayTracer.Setting(RT_Setting::Max_Bounces, max_bounces);
+		RayTracer.Setting(RT_Setting::Sensor_Size, Sensor_Size);
+		RayTracer.Setting(RT_Setting::Focal_Length, Focal_Length);
+		RayTracer.Setting(RT_Setting::View, camera.GetViewMatrix());
+		RayTracer.Setting(RT_Setting::Camera_Position, Vec3(camera.Position.x, camera.Position.y, camera.Position.z));
 
 		RayTracer.Render();
 

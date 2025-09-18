@@ -34,11 +34,13 @@ RayTracer::~RayTracer()
 void RayTracer::AddToBuffer(const Sphere& Sphere)
 {
 	m_SphereList.push_back(Sphere);
+	UploadSpheres();
 }
 
 void RayTracer::SwapBufferObject(const unsigned int& index, const Sphere& Sphere)
 {
 	m_SphereList.at(index) = Sphere;
+	UploadSpheres();
 }
 
 void RayTracer::ClearBuffer()
@@ -46,13 +48,14 @@ void RayTracer::ClearBuffer()
 	m_SphereList.clear();
 }
 
+
 void RayTracer::Clear(const float& Red, const float& Green, const float& Blue) const
 {
 	glClearColor(Red, Green, Blue, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 }
 
-void RayTracer::Render() const
+void RayTracer::UploadSpheres() const
 {
 	for (int i = 0; i < m_SphereList.size(); i++)
 	{
@@ -68,7 +71,10 @@ void RayTracer::Render() const
 		shader.SetFloat(out + ".Mat.Roughness", m_SphereList.at(i).material.Roughness);
 		shader.SetFloat(out + ".Mat.Emission", m_SphereList.at(i).material.Emission);
 	}
+}
 
+void RayTracer::Render() const
+{
 	WindowVA.Bind();
 	shader.Use();
 
