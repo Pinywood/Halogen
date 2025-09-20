@@ -15,7 +15,7 @@ void main()
 #shader fragment
 #version 330 core
 
-uniform sampler2D Accumulated;
+uniform sampler2D Image;
 uniform float exposure;
 uniform float gamma;
 in vec2 f_TexCoords;
@@ -33,7 +33,7 @@ vec4 ToneMapper(in vec4 color)
 
 void main()
 {
-	vec4 colorOut = texture(Accumulated, f_TexCoords);
+	vec4 colorOut = texture(Image, f_TexCoords);
 	colorOut *= vec4(vec3(exposure), 1.0);
 	colorOut = ToneMapper(colorOut);
 	colorOut = pow(colorOut, vec4(1.0/gamma));

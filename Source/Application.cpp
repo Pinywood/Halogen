@@ -29,8 +29,6 @@ float speed = 1.0;
 int WindowWidth = 1600;
 int WindowHeight = 800;
 
-int sample = 0;
-float AspectRatio = (float)WindowWidth / (float)WindowHeight;
 float deltaTime;
 float prevTime = 0.0;
 float currentTime;
@@ -39,6 +37,8 @@ float LastX = 450;
 float LastY = 450;
 bool FirstMouse = true;
 bool TurnEnable = false;
+bool Resized = false;
+bool Motion = false;
 
 const float Pi = 3.141592653589;
 
@@ -48,8 +48,8 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	WindowHeight = height;
 	
 	glViewport(0, 0, WindowWidth, WindowHeight);
-	AspectRatio = (double)WindowWidth / (double)WindowHeight;
-	sample = 0;
+
+	Resized = true;
 }
 
 void ProcessInput(GLFWwindow* window)
@@ -63,7 +63,7 @@ void ProcessInput(GLFWwindow* window)
 		speed *= 2.0;
 
 	if (camera.Move(window, deltaTime * speed))
-		sample = 0;
+		Motion = true;
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -90,7 +90,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	{
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		camera.Turn(xoffset, yoffset);
-		sample = 0;
+		Motion = true;
 	}
 
 	else
@@ -148,7 +148,7 @@ int main()
 	WindowVA.AddBuffer(WindowVB, WindowBufferLayout);
 	WindowIB.Bind();
 
-	RayTracer RayTracer;
+	RayTracer RayTracer(WindowWidth, WindowHeight);
 
 	Sphere Sphere1;
 	Sphere Sphere2;
@@ -183,22 +183,6 @@ int main()
 	RayTracer.AddToBuffer(Sphere2);
 	RayTracer.AddToBuffer(Sphere3);
 	RayTracer.AddToBuffer(Sphere4);
-
-	Renderer renderer;
-
-	Shader Accumulator("res/Accumulator.glsl");
-	Shader Display("res/Display.glsl");
-	Display.SetUniform("gamma", 2.2);
-
-	Framebuffer AccumulationFB(WindowWidth, WindowHeight);
-	Framebuffer CurrentSampleFB(WindowWidth, WindowHeight);
-
-	const int CurrentSampleTexSlot = 0;
-	const int AccumulatedTexSlot = 1;
-
-	Accumulator.SetUniform("CurrentSampleImage", CurrentSampleTexSlot);
-	Accumulator.SetUniform("Accumulated", AccumulatedTexSlot);
-	Display.SetUniform("Accumulated", AccumulatedTexSlot);
 	
 	//ImGUI setup
 	IMGUI_CHECKVERSION();
@@ -225,15 +209,33 @@ int main()
 	float SunAltitude = 30.0;
 	float SunAzimuthal = 0.0;
 	float SkyVariation = 0.2;
+
+	float gamma = 2.2;
 	float exposure = 0.3;
+
+	Renderer renderer;
+	Shader Display("res/Display.glsl");
+
+	const int RenderedImage = 1;						//TexSlot 0 is used for binding through indirect calls (like resize)
+	const int AccumulatedImage = 2;
+
+	Display.SetUniform("Image", AccumulatedImage);
+
+	RayTracer.StartAccumulation(RenderedImage, AccumulatedImage);
 
 	while (!glfwWindowShouldClose(window))
 	{
 		ProcessInput(window);
 		glfwPollEvents();
 
-		AccumulationFB.ReSize(WindowWidth, WindowHeight);
-		CurrentSampleFB.ReSize(WindowWidth, WindowHeight);
+		if (Resized)
+			RayTracer.FramebufferReSize(WindowWidth, WindowHeight);
+
+		if (Motion)
+			RayTracer.ResetAccumulation();
+
+		Resized = false;
+		Motion = false;
 
 		currentTime = glfwGetTime();
 		deltaTime = currentTime - prevTime;
@@ -271,10 +273,10 @@ int main()
 			modified |= ImGui::SliderFloat("Ground Roughness", &Sphere2.material.Roughness, 0.0f, 1.0f);
 
 			ImGui::SliderFloat("Exposure", &exposure, 0.0, 1.0);
+			ImGui::SliderFloat("Gamma", &gamma, 0.0, 3.0);
 
 			if (modified)
 			{
-				sample = 0;
 				RayTracer.SwapBufferObject(0, Sphere1);
 				RayTracer.SwapBufferObject(1, Sphere2);
 				RayTracer.SwapBufferObject(2, Sphere3);
@@ -282,42 +284,28 @@ int main()
 			}
 
 			std::stringstream ss;
-			ss << "Samples: " << sample;
-
+			ss << "Samples: " << RayTracer.RenderedSamples();
 			ImGui::Text(ss.str().c_str());
 
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 			ImGui::End();
 		}
 
-		CurrentSampleFB.Bind(CurrentSampleTexSlot);
-		RayTracer.Clear();
-
-		Display.SetUniform("exposure", exposure / 2.0);
-		RayTracer.Setting(RT_Setting::Current_Sample, sample);
 		RayTracer.Setting(RT_Setting::Sun_Radius, SunRadius / 200.0);
 		RayTracer.Setting(RT_Setting::Sun_Intensity, SunIntensity);
 		RayTracer.Setting(RT_Setting::Sun_Altitude, glm::radians(SunAltitude));
 		RayTracer.Setting(RT_Setting::Sun_Azimuthal, glm::radians(SunAzimuthal));
 		RayTracer.Setting(RT_Setting::Sky_Variation, SkyVariation);
-		RayTracer.Setting(RT_Setting::Aspect_Ratio, AspectRatio);
 		RayTracer.Setting(RT_Setting::Max_Bounces, max_bounces);
 		RayTracer.Setting(RT_Setting::Sensor_Size, Sensor_Size);
 		RayTracer.Setting(RT_Setting::Focal_Length, Focal_Length);
 		RayTracer.Setting(RT_Setting::View, camera.GetViewMatrix());
 		RayTracer.Setting(RT_Setting::Camera_Position, Vec3(camera.Position.x, camera.Position.y, camera.Position.z));
 
-		RayTracer.Render();
-
-		AccumulationFB.Bind(AccumulatedTexSlot);
-		Accumulator.SetUniform("CurrentSample", (float)sample);
-
-		if (sample == 0)
-			renderer.Clear(0.0, 0.0, 0.0);
-
-		renderer.Draw(WindowVA, 6, Accumulator);
-
-		AccumulationFB.UnBind();
+		RayTracer.Accumulate();
+	
+		Display.SetUniform("gamma", gamma);
+		Display.SetUniform("exposure", exposure / 2.0);
 		renderer.Draw(WindowVA, 6, Display);
 
 		ImGui::Render();
@@ -331,7 +319,6 @@ int main()
 		}
 
 		glfwSwapBuffers(window);
-		sample++;
 	}
 
 	ImGui_ImplOpenGL3_Shutdown();

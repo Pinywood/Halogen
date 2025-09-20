@@ -18,6 +18,7 @@ void main()
 uniform sampler2D CurrentSampleImage;
 uniform sampler2D Accumulated;
 uniform float CurrentSample;
+
 in vec2 f_TexCoords;
 
 out vec4 FragmentColor;

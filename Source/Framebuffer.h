@@ -20,12 +20,13 @@ public:
 class Framebuffer
 {
 public:
+	Framebuffer();
 	Framebuffer(const int& Width, const int& Height);
 	~Framebuffer();
 
 	void ReSize(const int& Width, const int& Height);
 	void Bind(const int& slot = 0) const;
-	void UnBind();
+	void UnBind() const;
 
 private:
 	unsigned int m_RendererID;

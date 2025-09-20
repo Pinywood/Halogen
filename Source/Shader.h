@@ -85,26 +85,21 @@ struct glslStruct
 
 class Shader
 {
-private:
-	unsigned int m_RendererID;
-	std::unordered_map<std::string, glslStruct> m_glslStructMap;
-	std::unordered_map<std::string, Uniform> m_UniformMap;
-
 public:
 	Shader() = default;
 	Shader(const std::string& filepath);
 	~Shader();
 	void Use() const;
 
-	void SetBool(const std::string& name, const bool& value);
-	void SetInt(const std::string& name, int value);
-	void SetFloat(const std::string& name, float value);
-	void SetFloat(const std::string& name, float value1, float value2);
-	void SetFloat(const std::string& name, float value1, float value2, float value3);
-	void SetFloat(const std::string& name, float value1, float value2, float value3, float value4);
-	void SetFloat(const std::string& name, const Vec3& Vector);
-	void SetMat3(const std::string& name, const glm::mat3& matrix);
-	void SetMat4(const std::string& name, const glm::mat4& matrix);
+	void SetBool(const std::string& name, const bool& value) const;
+	void SetInt(const std::string& name, int value) const;
+	void SetFloat(const std::string& name, float value) const;
+	void SetFloat(const std::string& name, float value1, float value2) const;
+	void SetFloat(const std::string& name, float value1, float value2, float value3) const;
+	void SetFloat(const std::string& name, float value1, float value2, float value3, float value4) const;
+	void SetFloat(const std::string& name, const Vec3& Vector) const;
+	void SetMat3(const std::string& name, const glm::mat3& matrix) const;
+	void SetMat4(const std::string& name, const glm::mat4& matrix) const;
 
 	void SetUniform(const std::string& name, const int& value);
 	void SetUniform(const std::string& name, const float& value);
@@ -126,4 +121,9 @@ private:
 
 	template<typename ...argTypes>
 	int SetUniformTemplate(const std::string& name, const glslType& Type, std::function<void(int, argTypes...)> glFunc, argTypes ...args);
+
+private:
+	unsigned int m_RendererID;
+	std::unordered_map<std::string, glslStruct> m_glslStructMap;
+	std::unordered_map<std::string, Uniform> m_UniformMap;
 };

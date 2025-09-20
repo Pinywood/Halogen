@@ -2,6 +2,7 @@
 
 #include<vector>
 #include<iostream>
+#include <algorithm>
 
 #include "Shader.h"
 #include "VertexArray.h"
@@ -10,19 +11,58 @@
 #include "VertexBufferLayout.h"
 #include "VectorMath.h"
 #include "Model.h"
+#include "Framebuffer.h"
 
 enum class RT_Setting
 {
-	Aspect_Ratio, Max_Bounces, Current_Sample,
+	Max_Bounces,
 	Sun_Radius, Sun_Intensity, Sun_Altitude, Sun_Azimuthal, Sky_Variation,
 	Sensor_Size, Focal_Length, View, Camera_Position
 };
 
-const std::unordered_map<RT_Setting, std::string> SettingUniformMap =
+template<>
+struct std::formatter<RT_Setting> : std::formatter<std::string>
 {
-	std::pair(RT_Setting::Aspect_Ratio, "AspectRatio"),
+	auto format(const RT_Setting& Setting, format_context& ctx) const
+	{
+		if(Setting == RT_Setting::Max_Bounces)
+			return std::formatter<std::string>::format(std::format("{}", "Max_Bounces"), ctx);
+
+		if (Setting == RT_Setting::Sun_Radius)
+			return std::formatter<std::string>::format(std::format("{}", "Sun_Radius"), ctx);
+
+		if (Setting == RT_Setting::Sun_Intensity)
+			return std::formatter<std::string>::format(std::format("{}", "Sun_Intensity"), ctx);
+
+		if (Setting == RT_Setting::Sun_Altitude)
+			return std::formatter<std::string>::format(std::format("{}", "Sun_Altitude"), ctx);
+
+		if (Setting == RT_Setting::Sun_Azimuthal)
+			return std::formatter<std::string>::format(std::format("{}", "Sun_Azimuthal"), ctx);
+
+		if (Setting == RT_Setting::Sky_Variation)
+			return std::formatter<std::string>::format(std::format("{}", "Sky_Variation"), ctx);
+
+		if (Setting == RT_Setting::Sensor_Size)
+			return std::formatter<std::string>::format(std::format("{}", "Sensor_Size"), ctx);
+
+		if (Setting == RT_Setting::Focal_Length)
+			return std::formatter<std::string>::format(std::format("{}", "Focal_Length"), ctx);
+
+		if (Setting == RT_Setting::View)
+			return std::formatter<std::string>::format(std::format("{}", "View"), ctx);
+
+		if (Setting == RT_Setting::Camera_Position)
+			return std::formatter<std::string>::format(std::format("{}", "Camera_Position"), ctx);
+
+		else
+			return std::formatter<std::string>::format(std::format("{}", "<Invalid Setting>"), ctx);
+	}
+};
+
+static const std::unordered_map<RT_Setting, std::string> SettingUniformMap =
+{
 	std::pair(RT_Setting::Max_Bounces, "max_bounces"),
-	std::pair(RT_Setting::Current_Sample, "CurrentSample"),
 	std::pair(RT_Setting::Sun_Radius, "SunRadius"),
 	std::pair(RT_Setting::Sun_Intensity, "SunIntensity"),
 	std::pair(RT_Setting::Sun_Altitude, "SunAltitude"),
@@ -34,32 +74,67 @@ const std::unordered_map<RT_Setting, std::string> SettingUniformMap =
 	std::pair(RT_Setting::Camera_Position, "CameraPos"),
 };
 
+template<typename Kout, typename Vout, typename Kin, typename Vin>
+static std::unordered_map<Kout, Vout> transformMap(const std::unordered_map<Kin, Vin>& inMap, const std::function<std::pair<Kout, Vout>(const std::pair<Kin, Vin>&)> mapfunc)
+{
+	std::unordered_map<Kout, Vout> outMap;
+	std::for_each(inMap.begin(), inMap.end(),
+		[&outMap, &mapfunc](const std::pair<Kin, Vin>& p) {
+			outMap.insert(mapfunc(p));
+		}
+	);
+	return outMap;
+}
+
+static const std::unordered_map<std::string, RT_Setting> InvSettingUniformMap = transformMap(SettingUniformMap,
+	std::function([](const std::pair<RT_Setting, std::string>& p) {
+		return std::make_pair(p.second, p.first);
+		})
+);
+
 class RayTracer
 {
 public:
-	RayTracer();
+	RayTracer(const int& FramebufferWidth, const int& FramebufferHeight);
 	~RayTracer();
+	void FramebufferReSize(const int& Width, const int& Height);
 	void Render() const;
-	void Clear(const float& Red = 0.2f, const float& Green = 0.2f, const float& Blue = 0.2f) const;
+	void StartAccumulation(const unsigned int& RenderSlot = 1, const unsigned int& AccumulationSlot = 2);
+	void Accumulate();
+	void ResetAccumulation();
+	void Clear(const float& Red = 0.0f, const float& Green = 0.0f, const float& Blue = 0.0f) const;
 	void AddToBuffer(const Sphere& Sphere);
 	void SwapBufferObject(const unsigned int& index, const Sphere& Sphere);
 	void ClearBuffer();
+	unsigned int RenderedSamples() const;
 
 	template<typename T>
 	void Setting(const RT_Setting& setting, const T& value)
 	{
 		const std::string& name = SettingUniformMap.at(setting);
-		shader.SetUniform(name, value);
+		RTShader.SetUniform(name, value);
 	}
 
 private:
+	void Draw() const;
 	void UploadSpheres() const;
 
 private:
-	mutable Shader shader = Shader("res/Ray Trace.glsl");
+	mutable Shader RTShader = Shader("res/Ray Trace.glsl");
+	mutable Shader AccumulationShader = Shader("res/Accumulator.glsl");
 	VertexBuffer WindowVB;
 	IndexBuffer WindowIB;
 	VertexArray WindowVA;
+
+	Framebuffer RenderFB;
+	Framebuffer AccumulationFB;
+
+	int RenderTexSlot;
+	int AccumulationTexSlot;
+	unsigned int FramebufferWidth;
+	unsigned int FramebufferHeight;
+
+	int CurrentSample = 0;
 
 	std::vector<Sphere> m_SphereList;
 };
