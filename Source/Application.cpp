@@ -17,13 +17,11 @@
 #include "Renderer.h"
 #include "Ray Tracer.h"
 #include "Model.h"
-#include "Camera.h"
 #include "Framebuffer.h"
 
 #include <iostream>
 #include <print>
 
-Camera camera;
 float speed = 1.0;
 
 int WindowWidth = 1600;
@@ -35,10 +33,18 @@ float currentTime;
 
 float LastX = 450;
 float LastY = 450;
+float xoffset;
+float yoffset;
+
+float deltaX = 0.0;
+float deltaY = 0.0;
+float deltaZ = 0.0;
+
 bool FirstMouse = true;
 bool TurnEnable = false;
 bool Resized = false;
-bool Motion = false;
+bool Turn = false;
+bool Move = false;
 
 const float Pi = 3.141592653589;
 
@@ -62,14 +68,59 @@ void ProcessInput(GLFWwindow* window)
 	if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		speed *= 2.0;
 
-	if (camera.Move(window, deltaTime * speed))
-		Motion = true;
+	const float distance = deltaTime * speed;
+
+	deltaX = 0.0;
+	deltaY = 0.0;
+	deltaZ = 0.0;
+
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+	{
+		Move = true;
+		deltaZ = -distance;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+	{
+		Move = true;
+		deltaX = -distance;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+	{
+		Move = true;
+		deltaZ = distance;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+	{
+		Move = true;
+		deltaX = distance;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+	{
+		Move = true;
+		deltaY = distance;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+	{
+		Move = true;
+		deltaY = -distance;
+	}
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	if (key == GLFW_KEY_E && action == GLFW_PRESS)
+	{
 		TurnEnable = !TurnEnable;
+
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		if(TurnEnable)
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	}
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
@@ -81,21 +132,15 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 		FirstMouse = false;
 	}
 
-	float xoffset = xpos - LastX;
-	float yoffset = LastY - ypos;
+	xoffset = xpos - LastX;
+	yoffset = LastY - ypos;
 	LastX = xpos;
 	LastY = ypos;
 
 	if (TurnEnable)
 	{
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		camera.Turn(xoffset, yoffset);
-		Motion = true;
+		Turn = true;
 	}
-
-	else
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-
 }
 
 int main()
@@ -231,11 +276,15 @@ int main()
 		if (Resized)
 			RayTracer.FramebufferReSize(WindowWidth, WindowHeight);
 
-		if (Motion)
-			RayTracer.ResetAccumulation();
+		if(Turn)
+			RayTracer.TurnCamera(xoffset, yoffset);
+
+		if(Move)
+			RayTracer.MoveCamera(deltaX, deltaY, deltaZ);
 
 		Resized = false;
-		Motion = false;
+		Turn = false;
+		Move = false;
 
 		currentTime = glfwGetTime();
 		deltaTime = currentTime - prevTime;
@@ -299,8 +348,6 @@ int main()
 		RayTracer.Setting(RT_Setting::Max_Bounces, max_bounces);
 		RayTracer.Setting(RT_Setting::Sensor_Size, Sensor_Size);
 		RayTracer.Setting(RT_Setting::Focal_Length, Focal_Length);
-		RayTracer.Setting(RT_Setting::View, camera.GetViewMatrix());
-		RayTracer.Setting(RT_Setting::Camera_Position, Vec3(camera.Position.x, camera.Position.y, camera.Position.z));
 
 		RayTracer.Accumulate();
 		RayTracer.Accumulate();

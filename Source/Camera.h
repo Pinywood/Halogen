@@ -36,8 +36,8 @@ public:
         updateCameraVectors();
     }
 
-    glm::mat3 GetViewMatrix();
-    bool Move(GLFWwindow* window, float distance);
+    glm::mat3 GetViewMatrix() const;
+    void Move(const float& deltaX, const float& deltaY, const float& deltaZ);
     void Turn(float xoffset, float yoffset, GLboolean constrainPitch = true);
 
 private:

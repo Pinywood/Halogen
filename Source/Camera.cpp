@@ -1,52 +1,17 @@
 #include "Camera.h"
 
-glm::mat3 Camera::GetViewMatrix()
+glm::mat3 Camera::GetViewMatrix() const
 {
     glm::mat3 View = glm::mat3(Right, Up, -Front);
     View = glm::transpose(View);
     return View;
 }
 
-bool Camera::Move(GLFWwindow* window, float distance)
+void Camera::Move(const float& deltaX, const float& deltaY, const float& deltaZ)
 {
-    bool moved = false;
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    {
-        moved = true;
-        Position += distance * Front;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    {
-        moved = true;
-        Position -= Right * distance;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    {
-        moved = true;
-        Position -= distance * Front;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    {
-        moved = true;
-        Position += Right * distance;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-    {
-        moved = true;
-        Position += distance * Up;
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-    {
-        moved = true;
-        Position -= distance * Up;
-    }
-
-    return moved;
+    Position += deltaX * Right;
+    Position += deltaY * Up;
+    Position -= deltaZ * Front;
 }
 
 void Camera::Turn(float xoffset, float yoffset, GLboolean constrainPitch)

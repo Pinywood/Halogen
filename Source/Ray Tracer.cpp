@@ -6,6 +6,9 @@ RayTracer::RayTracer(const int& FramebufferWidth, const int& FramebufferHeight)
 	const float AspectRatio = (float)FramebufferWidth / (float)FramebufferHeight;
 	RTShader.SetUniform("AspectRatio", AspectRatio);
 
+	RTShader.SetUniform("View", camera.GetViewMatrix());
+	RTShader.SetUniform("CameraPos", Vec3(camera.Position.x, camera.Position.y, camera.Position.z));
+
 	float Vertices[] =
 	{				   //Tex Coords
 		-1.0f, -1.0f,	0.0, 0.0,
@@ -152,4 +155,18 @@ void RayTracer::ResetAccumulation()
 unsigned int RayTracer::RenderedSamples() const
 {
 	return CurrentSample;
+}
+
+void RayTracer::MoveCamera(const float& deltaX, const float& deltaY, const float& deltaZ)
+{
+	camera.Move(deltaX, deltaY, deltaZ);
+	RTShader.SetUniform("CameraPos", Vec3(camera.Position.x, camera.Position.y, camera.Position.z));
+	ResetAccumulation();
+}
+
+void RayTracer::TurnCamera(const float& xoffset, const float& yoffset)
+{
+	camera.Turn(xoffset, yoffset);
+	RTShader.SetUniform("View", camera.GetViewMatrix());
+	ResetAccumulation();
 }

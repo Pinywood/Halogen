@@ -11,13 +11,14 @@
 #include "VertexBufferLayout.h"
 #include "VectorMath.h"
 #include "Model.h"
+#include "Camera.h"
 #include "Framebuffer.h"
 
 enum class RT_Setting
 {
 	Max_Bounces,
 	Sun_Radius, Sun_Intensity, Sun_Altitude, Sun_Azimuthal, Sky_Variation,
-	Sensor_Size, Focal_Length, View, Camera_Position
+	Sensor_Size, Focal_Length
 };
 
 template<>
@@ -49,12 +50,6 @@ struct std::formatter<RT_Setting> : std::formatter<std::string>
 		if (Setting == RT_Setting::Focal_Length)
 			return std::formatter<std::string>::format(std::format("{}", "Focal_Length"), ctx);
 
-		if (Setting == RT_Setting::View)
-			return std::formatter<std::string>::format(std::format("{}", "View"), ctx);
-
-		if (Setting == RT_Setting::Camera_Position)
-			return std::formatter<std::string>::format(std::format("{}", "Camera_Position"), ctx);
-
 		else
 			return std::formatter<std::string>::format(std::format("{}", "<Invalid Setting>"), ctx);
 	}
@@ -69,9 +64,7 @@ static const std::unordered_map<RT_Setting, std::string> SettingUniformMap =
 	std::pair(RT_Setting::Sun_Azimuthal, "SunAzimuthal"),
 	std::pair(RT_Setting::Sky_Variation, "SkyVariation"),
 	std::pair(RT_Setting::Sensor_Size, "u_Sensor_Size"),
-	std::pair(RT_Setting::Focal_Length, "u_Focal_Length"),
-	std::pair(RT_Setting::View, "View"),
-	std::pair(RT_Setting::Camera_Position, "CameraPos"),
+	std::pair(RT_Setting::Focal_Length, "u_Focal_Length")
 };
 
 template<typename Kout, typename Vout, typename Kin, typename Vin>
@@ -108,6 +101,9 @@ public:
 	void ClearBuffer();
 	unsigned int RenderedSamples() const;
 
+	void MoveCamera(const float& deltaX, const float& deltaY, const float& deltaZ);
+	void TurnCamera(const float& xoffset, const float& yoffset);
+
 	template<typename T>
 	void Setting(const RT_Setting& setting, const T& value)
 	{
@@ -125,6 +121,7 @@ private:
 	VertexBuffer WindowVB;
 	IndexBuffer WindowIB;
 	VertexArray WindowVA;
+	Camera camera;
 
 	Framebuffer RenderFB;
 	Framebuffer AccumulationFB;
