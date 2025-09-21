@@ -39,8 +39,10 @@ RayTracer::~RayTracer()
 void RayTracer::FramebufferReSize(const int& Width, const int& Height)
 {
 	ResetAccumulation();
-	RenderFB.ReSize(Width, Height);
-	AccumulationFB.ReSize(Width, Height);
+	FramebufferWidth = Width;
+	FramebufferHeight = Height;
+	RenderFB.ReSize(FramebufferWidth, FramebufferHeight);
+	AccumulationFB.ReSize(FramebufferWidth, FramebufferHeight);
 	const float AspectRatio = (float)Width / (float)Height;
 	RTShader.SetUniform("AspectRatio", AspectRatio);
 }
@@ -118,6 +120,9 @@ void RayTracer::StartAccumulation(const unsigned int& RenderSlot, const unsigned
 	RenderFB.ReSize(FramebufferWidth, FramebufferHeight);
 	AccumulationFB.ReSize(FramebufferWidth, FramebufferHeight);
 
+	AccumulationShader.SetUniform("CurrentSampleImage", RenderTexSlot);
+	AccumulationShader.SetUniform("Accumulated", AccumulationTexSlot);
+
 	ResetAccumulation();
 }
 
@@ -128,8 +133,6 @@ void RayTracer::Accumulate()
 	Render();
 
 	AccumulationFB.Bind(AccumulationTexSlot);
-	AccumulationShader.SetUniform("CurrentSampleImage", RenderTexSlot);
-	AccumulationShader.SetUniform("Accumulated", AccumulationTexSlot);
 	AccumulationShader.SetUniform("CurrentSample", (float)CurrentSample);
 	AccumulationShader.Use();
 	Draw();
@@ -143,6 +146,7 @@ void RayTracer::ResetAccumulation()
 	CurrentSample = 0;
 	AccumulationFB.Bind(AccumulationTexSlot);
 	Clear();
+	AccumulationFB.UnBind();
 }
 
 unsigned int RayTracer::RenderedSamples() const

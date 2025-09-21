@@ -303,6 +303,10 @@ int main()
 		RayTracer.Setting(RT_Setting::Camera_Position, Vec3(camera.Position.x, camera.Position.y, camera.Position.z));
 
 		RayTracer.Accumulate();
+		RayTracer.Accumulate();
+		RayTracer.Accumulate();
+		RayTracer.Accumulate();
+		RayTracer.Accumulate();
 	
 		Display.SetUniform("gamma", gamma);
 		Display.SetUniform("exposure", exposure / 2.0);

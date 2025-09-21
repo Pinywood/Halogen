@@ -55,13 +55,36 @@ void WorldColor(in vec3 direction, out vec4 color)
 float HitPoint(in Ray ray, in Sphere sphere)
 {
 	vec3 diff = ray.RayOrigin - sphere.Position;
-	float discriminant = pow(dot(ray.RayDir, diff), 2.0) - (dot(diff, diff) - pow(sphere.Radius, 2.0));
+	float RaySphereDist = dot(diff, diff);
+	float discriminant = dot(ray.RayDir, diff) * dot(ray.RayDir, diff) - (RaySphereDist - sphere.Radius * sphere.Radius);
 
 	if(discriminant < 0.0)
 		return -1.0;
 			
 	float temp = (-sqrt(discriminant) - dot(ray.RayDir, diff));
-	return temp;
+	float temp2 = (sqrt(discriminant) - dot(ray.RayDir, diff));
+
+	if(abs(temp) < 0.001 && abs(temp2) < 0.001)
+		return -1.0;
+
+	if(abs(temp) < 0.001)
+		return temp2;
+
+	if(abs(temp2) < 0.001)
+		return temp;
+
+	if(RaySphereDist < sphere.Radius * sphere.Radius)
+	{
+		if(temp > 0.0)
+			return temp;
+
+		return temp2;
+	}
+	
+	if(temp < temp2)
+		return temp;
+
+	return temp2;
 }
 
 void UpdateRay(inout Ray ray, in Sphere HitSphere, in float t, in float seed)
