@@ -28,7 +28,7 @@ void main()
 	Ray TracingRay;
 
 	TracingRay.RayOrigin = vec3(0.0, 0.0, 0.0);
-	TracingRay.RayDir = normalize(pixel_Position);
+	TracingRay.RayDir = pixel_Position;
 	TracingRay.RayColor = vec3(1.0, 1.0, 1.0);
 
 	vec3 color = ComputeRayColor(TracingRay, Spheres, max_bounces, float(CurrentSample));

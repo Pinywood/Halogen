@@ -10,9 +10,9 @@ float floatConstruct( uint m )
     return f - 1.0;                        
 }
 
+//Random vec3 in [0, 1] ^ 3
 vec3 pcg3d(vec3 uvw) 
 {
-
 	uvec3 v = floatBitsToUint(uvw);
     v = v * 1664525u + 1013904223u;
 
@@ -27,6 +27,18 @@ vec3 pcg3d(vec3 uvw)
     v.z += v.x*v.y;
 
     return vec3(floatConstruct(v.x), floatConstruct(v.y), floatConstruct(v.z));
+}
+
+vec3 pcg3dDisk(vec3 seed)
+{
+	const float pi = 3.1415926535;
+	float theta = 2.0 * pi * pcg3d(seed).x;
+	float r = pcg3d(seed).y;
+
+    float X = r * cos(theta);
+    float Y = r * sin(theta);
+
+	return vec3(X, Y, 0.0);
 }
 
 vec3 pcg3dSphere(vec3 seed)

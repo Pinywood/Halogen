@@ -107,6 +107,9 @@ void UpdateRay(inout Ray ray, in Sphere HitSphere, in float t, in float seed)
 
 vec3 ComputeRayColor(in Ray ray, in Sphere Models[ModelCount], in int max_bounces, in float seed)
 {
+	ray.RayDir = ray.RayDir + 0.0001 * pcg3dDisk((seed + 1.0) * ray.RayDir);
+	ray.RayDir = normalize(ray.RayDir);
+
 	for(int bounces = 0; bounces < max_bounces; bounces++)
 	{
 		bool IsHit = false;
