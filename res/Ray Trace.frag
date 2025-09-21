@@ -1,4 +1,4 @@
-#version 330 core
+#version 400 core
 const int ModelCount = 4;
 
 in vec3 WorldX;

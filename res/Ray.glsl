@@ -89,15 +89,17 @@ float HitPoint(in Ray ray, in Sphere sphere)
 
 void UpdateRay(inout Ray ray, in Sphere HitSphere, in float t, in float seed)
 {
-	ray.RayOrigin = ray.RayOrigin + t * ray.RayDir;		//RayOrigin = intersection
+	ray.RayOrigin = ray.RayOrigin + t * ray.RayDir;				//RayOrigin = Intersection
 
 	vec3 normal = ray.RayOrigin - HitSphere.Position;
 	normal = normalize(normal);
 
+	if(dot(normal, ray.RayDir) > 0.0)
+		normal = -normal;
+
 	vec3 randVec = pcg3dSphere(ray.RayDir + seed + 1.0);
 
-	if(dot(randVec, normal) < 0.0)
-		randVec *= -1.0;
+	randVec += normal;
 
 	ray.RayDir = mix(reflect(ray.RayDir, normal), randVec, HitSphere.Mat.Roughness);
 	ray.RayDir = normalize(ray.RayDir);

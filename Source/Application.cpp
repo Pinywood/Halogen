@@ -200,14 +200,14 @@ int main()
 	Sphere Sphere3;
 	Sphere Sphere4;
 
-	Sphere1.material.BaseColor = Vec3(0.7, 0.8, 1.0);
+	Sphere1.material.BaseColor = Vec3(0.9, 0.9, 0.9);
 	Sphere1.material.Roughness = 1.0;
 	Sphere1.material.Emission = 0.0;
 	Sphere1.Position = Vec3(0.0, 0.0, 0.0);
 	Sphere1.Radius = 1.0;
 
 	Sphere2.material.BaseColor = Vec3(0.6);
-	Sphere2.material.Roughness = 0.8;
+	Sphere2.material.Roughness = 0.9;
 	Sphere2.material.Emission = 0.0;
 	Sphere2.Position = Vec3(0.0, -1001.0, 0.0);
 	Sphere2.Radius = 1000.0;
