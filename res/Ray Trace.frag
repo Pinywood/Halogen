@@ -6,8 +6,6 @@ in vec3 WorldY;
 in vec3 WorldZ;
 
 #include "res/Model.glsl"
-#include "res/PRNG.glsl"
-#include "res/Ray.glsl"
 
 in vec2 positions;
 in Sphere Spheres[ModelCount];
@@ -18,6 +16,11 @@ in float Focal_Length;
 uniform float AspectRatio;
 uniform int CurrentSample;
 uniform int max_bounces;
+uniform int FramebufferWidth;
+uniform int FramebufferHeight;
+
+#include "res/PRNG.glsl"
+#include "res/Ray.glsl"
 
 out vec4 FragmentColor;
 

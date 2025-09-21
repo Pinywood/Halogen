@@ -5,6 +5,8 @@ RayTracer::RayTracer(const int& FramebufferWidth, const int& FramebufferHeight)
 {
 	const float AspectRatio = (float)FramebufferWidth / (float)FramebufferHeight;
 	RTShader.SetUniform("AspectRatio", AspectRatio);
+	RTShader.SetUniform("FramebufferWidth", FramebufferWidth);
+	RTShader.SetUniform("FramebufferHeight", FramebufferHeight);
 
 	RTShader.SetUniform("View", camera.GetViewMatrix());
 	RTShader.SetUniform("CameraPos", Vec3(camera.Position.x, camera.Position.y, camera.Position.z));
@@ -48,6 +50,8 @@ void RayTracer::FramebufferReSize(const int& Width, const int& Height)
 	AccumulationFB.ReSize(FramebufferWidth, FramebufferHeight);
 	const float AspectRatio = (float)Width / (float)Height;
 	RTShader.SetUniform("AspectRatio", AspectRatio);
+	RTShader.SetUniform("FramebufferWidth", FramebufferWidth);
+	RTShader.SetUniform("FramebufferHeight", FramebufferHeight);
 }
 
 void RayTracer::AddToBuffer(const Sphere& Sphere)

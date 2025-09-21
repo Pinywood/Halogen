@@ -128,8 +128,8 @@ private:
 
 	int RenderTexSlot;
 	int AccumulationTexSlot;
-	unsigned int FramebufferWidth;
-	unsigned int FramebufferHeight;
+	int FramebufferWidth;
+	int FramebufferHeight;
 
 	int CurrentSample = 0;
 
