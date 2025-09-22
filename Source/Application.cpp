@@ -66,7 +66,7 @@ void ProcessInput(GLFWwindow* window)
 	speed = 1.5;
 
 	if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-		speed *= 2.0;
+		speed *= 2.5;
 
 	const float distance = deltaTime * speed;
 

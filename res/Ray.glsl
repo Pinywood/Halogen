@@ -101,6 +101,9 @@ void UpdateRay(inout Ray ray, in Sphere HitSphere, in float t, in float seed)
 
 	randVec += normal;
 
+	if(abs(randVec.x) < 0.001 && abs(randVec.y) < 0.001 && abs(randVec.z) < 0.001)		//Catch reflection rays close to 0
+		randVec = normal;
+
 	ray.RayDir = mix(reflect(ray.RayDir, normal), randVec, HitSphere.Mat.Roughness);
 	ray.RayDir = normalize(ray.RayDir);
 
@@ -109,7 +112,7 @@ void UpdateRay(inout Ray ray, in Sphere HitSphere, in float t, in float seed)
 
 vec3 ComputeRayColor(in Ray ray, in Sphere Models[ModelCount], in int max_bounces, in float seed)
 {
-	vec3 RayOffset = pcg3dDisk((seed + 1.0) * ray.RayDir);
+	vec3 RayOffset = vec3(pcg3d(ray.RayDir + seed + 1.0).xy, 0.0);			//Make native square sampling
 	float OffsetWidth = (2.0 * AspectRatio * Sensor_Size) / float(FramebufferWidth);
 	float OffsetHeight =  (2.0 * Sensor_Size) / float(FramebufferHeight);
 
