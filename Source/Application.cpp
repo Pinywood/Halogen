@@ -169,30 +169,6 @@ int main()
 
 	glfwSwapInterval(1);
 
-	float Vertices[] =
-	{				   //Tex Coords
-		-1.0f, -1.0f,	0.0, 0.0,
-		 1.0f, -1.0f,	1.0, 0.0,
-		 1.0f,  1.0f,	1.0, 1.0,
-		-1.0f,  1.0f,	0.0, 1.0
-	};
-
-	unsigned int Indices[6] =
-	{
-		0, 1, 2,
-		2, 3, 0
-	};
-	VertexBufferLayout WindowBufferLayout;
-
-	VertexBuffer WindowVB(Vertices, sizeof(Vertices));
-	IndexBuffer WindowIB(Indices, 6);
-	VertexArray WindowVA;
-
-	WindowBufferLayout.Push<float>(2);
-	WindowBufferLayout.Push<float>(2);
-	WindowVA.AddBuffer(WindowVB, WindowBufferLayout);
-	WindowIB.Bind();
-
 	RayTracer RayTracer(WindowWidth, WindowHeight);
 
 	Sphere Sphere1;
@@ -346,8 +322,8 @@ int main()
 		RayTracer.Setting(RT_Setting::Sun_Azimuthal, glm::radians(SunAzimuthal));
 		RayTracer.Setting(RT_Setting::Sky_Variation, SkyVariation);
 		RayTracer.Setting(RT_Setting::Max_Bounces, max_bounces);
-		RayTracer.Setting(RT_Setting::Sensor_Size, Sensor_Size);
-		RayTracer.Setting(RT_Setting::Focal_Length, Focal_Length);
+		RayTracer.Setting(RT_Setting::Sensor_Size, Sensor_Size / 1000.0);
+		RayTracer.Setting(RT_Setting::Focal_Length, Focal_Length / 1000.0);
 
 		RayTracer.Accumulate();
 		RayTracer.Accumulate();
@@ -357,7 +333,8 @@ int main()
 	
 		Display.SetUniform("gamma", gamma);
 		Display.SetUniform("exposure", exposure / 2.0);
-		renderer.Draw(WindowVA, 6, Display);
+		Display.Use();
+		RayTracer.Draw();
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

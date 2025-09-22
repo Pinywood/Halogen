@@ -1,4 +1,4 @@
 #shader vertex
-#include "res/Ray Trace.vert"
+#include "Ray Trace.vert"
 #shader fragment
-#include "res/Ray Trace.frag"
+#include "Ray Trace.frag"

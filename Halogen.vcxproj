@@ -136,7 +136,6 @@
     <ClCompile Include="Source\Framebuffer.cpp" />
     <ClCompile Include="Source\IndexBuffer.cpp" />
     <ClCompile Include="Source\Ray Tracer.cpp" />
-    <ClCompile Include="Source\Renderer.cpp" />
     <ClCompile Include="Source\Shader.cpp" />
     <ClCompile Include="Source\VectorMath.cpp" />
     <ClCompile Include="Source\Vendor\ImGui\imgui.cpp" />
@@ -156,7 +155,6 @@
     <ClInclude Include="Source\IndexBuffer.h" />
     <ClInclude Include="Source\Model.h" />
     <ClInclude Include="Source\Ray Tracer.h" />
-    <ClInclude Include="Source\Renderer.h" />
     <ClInclude Include="Source\Shader.h" />
     <ClInclude Include="Source\VectorMath.h" />
     <ClInclude Include="Source\Vendor\ImGui\imconfig.h" />
@@ -181,6 +179,7 @@
     <None Include="res\Ray Trace.glsl" />
     <None Include="res\Ray Trace.vert" />
     <None Include="res\Ray.glsl" />
+    <None Include="res\Uniforms.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

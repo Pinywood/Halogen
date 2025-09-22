@@ -63,8 +63,8 @@ static const std::unordered_map<RT_Setting, std::string> SettingUniformMap =
 	std::pair(RT_Setting::Sun_Altitude, "SunAltitude"),
 	std::pair(RT_Setting::Sun_Azimuthal, "SunAzimuthal"),
 	std::pair(RT_Setting::Sky_Variation, "SkyVariation"),
-	std::pair(RT_Setting::Sensor_Size, "u_Sensor_Size"),
-	std::pair(RT_Setting::Focal_Length, "u_Focal_Length")
+	std::pair(RT_Setting::Sensor_Size, "Sensor_Size"),
+	std::pair(RT_Setting::Focal_Length, "Focal_Length")
 };
 
 template<typename Kout, typename Vout, typename Kin, typename Vin>
@@ -91,6 +91,7 @@ public:
 	RayTracer(const int& FramebufferWidth, const int& FramebufferHeight);
 	~RayTracer();
 	void FramebufferReSize(const int& Width, const int& Height);
+	void Draw() const;
 	void Render() const;
 	void StartAccumulation(const unsigned int& RenderSlot = 1, const unsigned int& AccumulationSlot = 2);
 	void Accumulate();
@@ -112,7 +113,6 @@ public:
 	}
 
 private:
-	void Draw() const;
 	void UploadSpheres() const;
 
 private:

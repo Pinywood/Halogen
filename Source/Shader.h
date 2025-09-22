@@ -114,6 +114,7 @@ public:
 
 private:
 	std::tuple<std::string, std::string> ParseShader(std::stringstream& stream);
+	std::string GetFileDirectory(const std::string& filepath) const;
 	std::stringstream ProcessIncludes(const std::string& filepath) const;
 	std::stringstream PreProcess(const std::string& filepath) const;
 	int CompileShader(unsigned int type, const std::string& source);

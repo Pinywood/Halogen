@@ -1,8 +1,10 @@
-uniform float SunRadius;										//Should be in [0, 1], it is the cos of the angular radius
-uniform float SunIntensity;
-uniform float SunAltitude;
-uniform float SunAzimuthal;
-uniform float SkyVariation;
+#include "Model.glsl"
+#include "Uniforms.glsl"
+#include "PRNG.glsl"
+
+in vec3 WorldX;
+in vec3 WorldY;
+in vec3 WorldZ;
 
 struct Ray
 {

@@ -249,6 +249,19 @@ std::tuple<std::string, std::string> Shader::ParseShader(std::stringstream& stre
 	return { ss[0].str(), ss[1].str() };
 }
 
+std::string Shader::GetFileDirectory(const std::string& filepath) const
+{
+	std::string directory = filepath;
+	char c = directory.back();
+	while (c != '/')
+	{
+		directory.pop_back();
+		c = directory.back();
+	}
+
+	return directory;
+}
+
 std::stringstream Shader::ProcessIncludes(const std::string& filepath) const
 {
 	std::ifstream stream(filepath);
@@ -261,6 +274,8 @@ std::stringstream Shader::ProcessIncludes(const std::string& filepath) const
 		{
 			std::string FilePathBuffer;
 			char c = ' ';
+			FilePathBuffer += GetFileDirectory(filepath);
+
 			for (int i = line.find('"') + 1; i < line.length(); i++)
 			{
 				c = line.at(i);

@@ -27,9 +27,6 @@
     <ClCompile Include="Source\Ray Tracer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Renderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -81,9 +78,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\Ray Tracer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Renderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\Shader.h">
@@ -141,5 +135,6 @@
     <None Include="res\Ray.glsl" />
     <None Include="res\Accumulator.glsl" />
     <None Include="res\Display.glsl" />
+    <None Include="res\Uniforms.glsl" />
   </ItemGroup>
 </Project>
