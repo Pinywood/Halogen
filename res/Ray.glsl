@@ -1,3 +1,4 @@
+//!#version 400
 #include "Model.glsl"
 #include "Uniforms.glsl"
 #include "PRNG.glsl"
@@ -11,6 +12,13 @@ struct Ray
 	vec3 RayOrigin;
 	vec3 RayDir;
 	vec3 RayColor;
+};
+
+struct HitRecord
+{
+	bool Hit;
+	float t;
+	Sphere HitSphere;
 };
 
 void WorldColor(in vec3 direction, out vec4 color)
@@ -54,46 +62,90 @@ void WorldColor(in vec3 direction, out vec4 color)
 	color = (SunColor) * sin(1.57 * t) + color;
 }
 
-float HitPoint(in Ray ray, in Sphere sphere)
+HitRecord HitPoint(in Ray ray, in Sphere sphere)
 {
+	HitRecord record;
+	record.Hit = false;
+	record.HitSphere = sphere;
+	record.t = -1.0;
+
 	vec3 diff = ray.RayOrigin - sphere.Position;
 	float RaySphereDist = dot(diff, diff);
 	float discriminant = dot(ray.RayDir, diff) * dot(ray.RayDir, diff) - (RaySphereDist - sphere.Radius * sphere.Radius);
 
 	if(discriminant < 0.0)
-		return -1.0;
+		return record;
 			
 	float temp = (-sqrt(discriminant) - dot(ray.RayDir, diff));
 	float temp2 = (sqrt(discriminant) - dot(ray.RayDir, diff));
 
 	if(abs(temp) < 0.001 && abs(temp2) < 0.001)
-		return -1.0;
+		return record;
+
+	record.Hit = true;
 
 	if(abs(temp) < 0.001)
-		return temp2;
+	{
+		record.t = temp2;
+		return record;
+	}
 
 	if(abs(temp2) < 0.001)
-		return temp;
+	{
+		record.t = temp;
+		return record;
+	}
 
 	if(RaySphereDist < sphere.Radius * sphere.Radius)
 	{
 		if(temp > 0.0)
-			return temp;
+		{
+			record.t = temp;
+			return record;
+		}
 
-		return temp2;
+		record.t = temp2;
+		return record;
 	}
 	
 	if(temp < temp2)
-		return temp;
+	{
+		record.t = temp;
+		return record;
+	}
 
-	return temp2;
+		
+	record.t = temp2;
+	return record;
 }
 
-void UpdateRay(inout Ray ray, in Sphere HitSphere, in float t, in float seed)
+HitRecord HitPoint(Ray ray, Sphere Models[ModelCount])
 {
-	ray.RayOrigin = ray.RayOrigin + t * ray.RayDir;				//RayOrigin = Intersection
+	HitRecord record;
+	record.Hit = false;
+	record.t = 99999.999;
 
-	vec3 normal = ray.RayOrigin - HitSphere.Position;
+	for(int i = 0; i < ModelCount; i++)
+	{
+		Sphere sphere = Models[i];
+		HitRecord temp = HitPoint(ray, sphere);
+
+		if(0.0 < temp.t && temp.t < record.t)
+		{
+			record.Hit = true;
+			record.HitSphere = sphere;
+			record.t = temp.t;
+		}
+	}
+
+	return record;
+}
+
+void UpdateRay(inout Ray ray, HitRecord record, in float seed)
+{
+	ray.RayOrigin = ray.RayOrigin + record.t * ray.RayDir;				//RayOrigin = Intersection
+
+	vec3 normal = ray.RayOrigin - record.HitSphere.Position;
 	normal = normalize(normal);
 
 	if(dot(normal, ray.RayDir) > 0.0)
@@ -106,10 +158,10 @@ void UpdateRay(inout Ray ray, in Sphere HitSphere, in float t, in float seed)
 	if(abs(randVec.x) < 0.001 && abs(randVec.y) < 0.001 && abs(randVec.z) < 0.001)		//Catch reflection rays close to 0
 		randVec = normal;
 
-	ray.RayDir = mix(reflect(ray.RayDir, normal), randVec, HitSphere.Mat.Roughness);
+	ray.RayDir = mix(reflect(ray.RayDir, normal), randVec, record.HitSphere.Mat.Roughness);
 	ray.RayDir = normalize(ray.RayDir);
 
-	ray.RayColor *= HitSphere.Mat.BaseColor;
+	ray.RayColor *= record.HitSphere.Mat.BaseColor;
 }
 
 vec3 ComputeRayColor(in Ray ray, in Sphere Models[ModelCount], in int max_bounces, in float seed)
@@ -125,38 +177,23 @@ vec3 ComputeRayColor(in Ray ray, in Sphere Models[ModelCount], in int max_bounce
 
 	for(int bounces = 0; bounces < max_bounces; bounces++)
 	{
-		bool IsHit = false;
-		float t = 99999.999;
-		Sphere HitSphere;
+		HitRecord record = HitPoint(ray, Models);
 
-		for(int i = 0; i < ModelCount; i++)
-		{
-			Sphere sphere = Models[i];
-			float temp = HitPoint(ray, sphere);
-
-			if(0.0 < temp && temp < t)
-			{
-				IsHit = true;
-				HitSphere = sphere;
-				t = temp;
-			}
-		}
-
-		if(!IsHit)
+		if(!record.Hit)
 		{
 			vec4 color;
 			WorldColor(ray.RayDir, color);
 			color *= vec4(ray.RayColor, 1.0);
-			return color.xyz;
+			return color.rgb;
 		}
 
-		if(HitSphere.Mat.Emission != 0.0)
+		if(record.HitSphere.Mat.Emission != 0.0)
 		{
-			ray.RayColor *= HitSphere.Mat.BaseColor * HitSphere.Mat.Emission;
+			ray.RayColor *= record.HitSphere.Mat.BaseColor * record.HitSphere.Mat.Emission;
 			return ray.RayColor;
 		}
 
-		UpdateRay(ray, HitSphere, t, seed);
+		UpdateRay(ray, record, seed);
 	}
 
 	return vec3(0.0);

@@ -113,10 +113,10 @@ public:
 	bool CheckUniformStatus(const std::string& name) const;
 
 private:
-	std::tuple<std::string, std::string> ParseShader(std::stringstream& stream);
+	std::tuple<std::string, std::string> ParseShader(const std::string& ShaderCode);
 	std::string GetFileDirectory(const std::string& filepath) const;
-	std::stringstream ProcessIncludes(const std::string& filepath) const;
-	std::stringstream PreProcess(const std::string& filepath) const;
+	std::string ProcessIncludes(const std::string& filepath) const;
+	std::string PreProcess(const std::string& filepath) const;
 	int CompileShader(unsigned int type, const std::string& source);
 	void SetUniformLocations();
 

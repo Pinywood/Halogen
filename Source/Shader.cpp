@@ -2,8 +2,8 @@
 
 Shader::Shader(const std::string& filepath)
 {
-	std::stringstream ss = PreProcess(filepath);
-	const auto& [VertexSource, FragmentSource] = ParseShader(ss);
+	const std::string& ShaderCode = PreProcess(filepath);
+	const auto& [VertexSource, FragmentSource] = ParseShader(ShaderCode);
 
 	unsigned int VertexShaderID = CompileShader(GL_VERTEX_SHADER, VertexSource);
 	unsigned int FragmentShaderID = CompileShader(GL_FRAGMENT_SHADER, FragmentSource);
@@ -153,7 +153,7 @@ bool Shader::CheckUniformStatus(const std::string& name) const
 	return m_UniformMap.at(name).Set;
 }
 
-std::tuple<std::string, std::string> Shader::ParseShader(std::stringstream& stream)
+std::tuple<std::string, std::string> Shader::ParseShader(const std::string& ShaderCode)
 {
 	enum class ShaderType
 	{
@@ -161,6 +161,8 @@ std::tuple<std::string, std::string> Shader::ParseShader(std::stringstream& stre
 	};
 
 	std::string line;
+	std::stringstream stream;
+	stream << ShaderCode;
 	std::stringstream ss[2];
 	ShaderType type = ShaderType::NONE;
 
@@ -262,11 +264,17 @@ std::string Shader::GetFileDirectory(const std::string& filepath) const
 	return directory;
 }
 
-std::stringstream Shader::ProcessIncludes(const std::string& filepath) const
+std::string Shader::ProcessIncludes(const std::string& filepath) const
 {
 	std::ifstream stream(filepath);
 	std::string line;
 	std::stringstream ss;
+
+	if (!stream.is_open())
+	{
+		std::println("Failed to Open: {}", filepath);
+		return ss.str();
+	}
 
 	while (getline(stream, line))
 	{
@@ -285,7 +293,7 @@ std::stringstream Shader::ProcessIncludes(const std::string& filepath) const
 				FilePathBuffer.push_back(c);
 			}
 			
-			ss << ProcessIncludes(FilePathBuffer).str() << '\n';
+			ss << ProcessIncludes(FilePathBuffer) << '\n';
 		}
 
 		else
@@ -294,15 +302,14 @@ std::stringstream Shader::ProcessIncludes(const std::string& filepath) const
 		}
 	}
 
-	return ss;
+	stream.close();
+	return ss.str();
 }
 
-std::stringstream Shader::PreProcess(const std::string& filepath) const
+std::string Shader::PreProcess(const std::string& filepath) const
 {
-	std::stringstream ss;
-	ss = ProcessIncludes(filepath);
-
-	return ss;
+	std::string ShaderCode = ProcessIncludes(filepath);
+	return ShaderCode;
 }
 
 int Shader::CompileShader(unsigned int type, const std::string& source)
