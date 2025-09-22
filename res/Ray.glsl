@@ -114,9 +114,9 @@ void UpdateRay(inout Ray ray, in Sphere HitSphere, in float t, in float seed)
 
 vec3 ComputeRayColor(in Ray ray, in Sphere Models[ModelCount], in int max_bounces, in float seed)
 {
-	vec3 RayOffset = vec3(pcg3d(ray.RayDir + seed + 1.0).xy, 0.0);			//Make native square sampling
-	float OffsetWidth = (2.0 * AspectRatio * Sensor_Size) / float(FramebufferWidth);
-	float OffsetHeight =  (2.0 * Sensor_Size) / float(FramebufferHeight);
+	vec3 RayOffset = 2.0 * vec3(pcg3d(ray.RayDir + seed + 1.0).xy, 0.0) - 1.0;			//Make native square sampling
+	float OffsetWidth = Sensor_Size / float(FramebufferWidth);
+	float OffsetHeight =  (Sensor_Size / AspectRatio) / float(FramebufferHeight);
 
 	RayOffset *= vec3(OffsetWidth, OffsetHeight, 0.0);
 

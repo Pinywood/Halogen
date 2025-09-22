@@ -14,7 +14,6 @@
 #include "VertexBufferLayout.h"
 #include "VertexArray.h"
 #include "Shader.h"
-#include "Renderer.h"
 #include "Ray Tracer.h"
 #include "Model.h"
 #include "Framebuffer.h"
@@ -143,6 +142,25 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	}
 }
 
+ImGuiIO& SetupImGui(GLFWwindow* window)
+{
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
+	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+
+	const char* glsl_version = "#version 330";
+	ImGui_ImplOpenGL3_Init(glsl_version);
+
+	return io;
+}
+
 int main()
 {
 	glfwInit();
@@ -205,21 +223,7 @@ int main()
 	RayTracer.AddToBuffer(Sphere3);
 	RayTracer.AddToBuffer(Sphere4);
 	
-	//ImGUI setup
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
-	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-
-	ImGui::StyleColorsDark();
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-
-	const char* glsl_version = "#version 330";
-	ImGui_ImplOpenGL3_Init(glsl_version);
-	//setup end
+	ImGuiIO& io = SetupImGui(window);
 
 	int max_bounces = 10;
 	float Sensor_Size = 100.0;
@@ -234,7 +238,6 @@ int main()
 	float gamma = 2.2;
 	float exposure = 0.3;
 
-	Renderer renderer;
 	Shader Display("res/Display.glsl");
 
 	const int RenderedImage = 1;						//TexSlot 0 is used for binding through indirect calls (like resize)
