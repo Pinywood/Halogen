@@ -30,8 +30,8 @@ void WorldColor(in vec3 direction, out vec4 color)
 
 	vec3 SunHaloPos = SunPos;
 	vec4 SunHaloColor = vec4(1.0, 1.0, 0.2, 1.0);
-	SunHaloColor *= vec4(vec3(4.0), 1.0);
-	float SunHaloRadius = 1.0;								//Should be in [0, 1], it is the cos of the angular radius
+	SunHaloColor *= vec4(vec3(2.0), 1.0);
+	float SunHaloRadius = 0.9;								//Should be in [0, 1], it is the cos of the angular radius
 
 	float theta = dot(direction, WorldY);
 	float theta2 = dot(direction, SunHaloPos);
@@ -40,18 +40,17 @@ void WorldColor(in vec3 direction, out vec4 color)
 	if(theta < 0.0)
 	{
 		float expVal = exp(-10.0 * theta * theta);
-		color = vec4(0.7 * expVal, 0.7 * expVal, expVal, 1.0);
+		color = vec4(0.8 * expVal, 0.8 * expVal, expVal, 1.0);
 	}
 
 	else
 	{
 		theta = cos(theta);
-		float R = (theta - 0.3) * SkyVariation + 0.7 * (1.0 - SkyVariation);
+		float R = (theta - 0.2) * SkyVariation + 0.8 * (1.0 - SkyVariation);
 		float G = R;
 		float B = theta * SkyVariation + 1.0 - SkyVariation;
 		color = vec4(R, G, B, 1.0);
 	}
-
 	
 	color *= vec4(vec3(10.0), 1.0);
 	float t = exp(-1.0 * (theta2 - 1.0) * (theta2 - 1.0)/ (SunHaloRadius * SunHaloRadius));
@@ -141,7 +140,7 @@ HitRecord HitPoint(Ray ray, Sphere Models[ModelCount])
 	return record;
 }
 
-void UpdateRay(inout Ray ray, HitRecord record, in float seed)
+void Scatter(Diffuse diffuse, inout Ray ray, HitRecord record, in float seed)
 {
 	ray.RayOrigin = ray.RayOrigin + record.t * ray.RayDir;				//RayOrigin = Intersection
 
@@ -161,7 +160,67 @@ void UpdateRay(inout Ray ray, HitRecord record, in float seed)
 	ray.RayDir = mix(reflect(ray.RayDir, normal), randVec, record.HitSphere.Mat.Roughness);
 	ray.RayDir = normalize(ray.RayDir);
 
-	ray.RayColor *= record.HitSphere.Mat.BaseColor;
+	ray.RayColor *= record.HitSphere.Mat.Albedo;
+}
+
+float reflectance(float cosine, float IOR)
+{
+	float r0 = (1.0 - IOR) / (1.0 + IOR);
+	r0 = r0 * r0;
+	return r0 + (1.0 - r0) * pow(1.0 - cosine, 5.0);
+}
+
+void Scatter(Glass glass, inout Ray ray, HitRecord record, in float seed)
+{
+	ray.RayOrigin = ray.RayOrigin + record.t * ray.RayDir;				//RayOrigin = Intersection
+
+	vec3 normal = ray.RayOrigin - record.HitSphere.Position;
+	normal = normalize(normal);
+
+	float IOR = 1.0/glass.IOR;
+
+	if(dot(normal, ray.RayDir) > 0.0)
+	{
+		normal = -normal;
+		IOR = glass.IOR;
+	}
+
+	float cos_theta = min(dot(-ray.RayDir, normal), 1.0);
+	float sin_theta = sqrt(1.0 - cos_theta * cos_theta);
+
+	if(IOR * sin_theta > 1.0 || reflectance(cos_theta, IOR) > pcg(seed + 13.0))
+		ray.RayDir = reflect(ray.RayDir, normal);
+	
+	else
+		ray.RayDir = refract(ray.RayDir, normal, IOR);
+	
+	ray.RayDir = normalize(ray.RayDir);
+	ray.RayColor *= glass.Albedo;
+}
+
+void UpdateRay(inout Ray ray, HitRecord record, in float seed)
+{
+	switch(int(record.HitSphere.Mat.Type))
+	{
+		case DiffuseType:
+		{
+			Diffuse diffuse;
+			diffuse.Albedo = record.HitSphere.Mat.Albedo;
+			diffuse.Roughness = record.HitSphere.Mat.Roughness;
+			diffuse.Emission = record.HitSphere.Mat.Emission;
+			Scatter(diffuse, ray, record, seed);
+			break;
+		}
+
+		case GlassType:
+		{
+			Glass glass;
+			glass.Albedo = record.HitSphere.Mat.Albedo;
+			glass.IOR = record.HitSphere.Mat.IOR;
+			Scatter(glass, ray, record, seed);
+			break;
+		}
+	}
 }
 
 vec3 ComputeRayColor(in Ray ray, in Sphere Models[ModelCount], in int max_bounces, in float seed)
@@ -189,7 +248,7 @@ vec3 ComputeRayColor(in Ray ray, in Sphere Models[ModelCount], in int max_bounce
 
 		if(record.HitSphere.Mat.Emission != 0.0)
 		{
-			ray.RayColor *= record.HitSphere.Mat.BaseColor * record.HitSphere.Mat.Emission;
+			ray.RayColor *= record.HitSphere.Mat.Albedo * record.HitSphere.Mat.Emission;
 			return ray.RayColor;
 		}
 

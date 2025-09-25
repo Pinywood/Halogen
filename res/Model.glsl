@@ -1,8 +1,26 @@
-struct Material
+struct Diffuse
 {
-	vec3 BaseColor;
+	vec3 Albedo;
 	float Roughness;
 	float Emission;
+};
+
+struct Glass
+{
+	vec3 Albedo;
+	float IOR;
+};
+
+const int DiffuseType = 0;
+const int GlassType = 1;
+
+struct Material
+{
+	float Type;
+	vec3 Albedo;
+	float Roughness;
+	float Emission;
+	float IOR;
 };
 
 struct Sphere

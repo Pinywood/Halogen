@@ -99,9 +99,11 @@ void RayTracer::UploadSpheres() const
 
 		RTShader.SetFloat(out + ".Position", m_SphereList.at(i).Position);
 		RTShader.SetFloat(out + ".Radius", m_SphereList.at(i).Radius);
-		RTShader.SetFloat(out + ".Mat.BaseColor", m_SphereList.at(i).material.BaseColor);
+		RTShader.SetFloat(out + ".Mat.Type", (float)m_SphereList.at(i).material.Type);
+		RTShader.SetFloat(out + ".Mat.Albedo", m_SphereList.at(i).material.Albedo);
 		RTShader.SetFloat(out + ".Mat.Roughness", m_SphereList.at(i).material.Roughness);
 		RTShader.SetFloat(out + ".Mat.Emission", m_SphereList.at(i).material.Emission);
+		RTShader.SetFloat(out + ".Mat.IOR", m_SphereList.at(i).material.IOR);
 	}
 }
 
