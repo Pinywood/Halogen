@@ -150,7 +150,12 @@ std::unordered_map<std::string, Uniform> Shader::GetUniformMap() const
 
 bool Shader::CheckUniformStatus(const std::string& name) const
 {
-	return m_UniformMap.at(name).Set;
+	const auto& found = m_UniformMap.find(name);
+	if(found != m_UniformMap.end())
+		return m_UniformMap.at(name).Set;
+
+	std::println("Attempting to check uniform {}'s status: Does not exist", name);
+	return false;
 }
 
 std::tuple<std::string, std::string> Shader::ParseShader(const std::string& ShaderCode)
