@@ -21,7 +21,7 @@
 
 enum class glslType
 {
-	glslInt, glslFloat, glslVec2, glslVec3, glslVec4, glslStruct, glslMat3, glslMat4
+	None, glslInt, glslFloat, glslVec2, glslVec3, glslVec4, glslStruct, glslMat3, glslMat4
 };
 
 template<>
@@ -72,8 +72,8 @@ const std::unordered_map<std::string, glslType> glslTypeMap =
 
 struct Uniform
 {
-	int Location;
-	glslType Type;
+	int Location = -1;
+	glslType Type = glslType::None;
 	bool Is_Array = false;
 	bool Set = false;
 };
@@ -83,11 +83,21 @@ struct glslStruct
 	std::string Name;
 };
 
+static bool TokenPresent(const std::string& string, const std::string& token)
+{
+	const auto& found = string.find(token);
+	if (found != std::string::npos && found < string.find("//"))
+		return true;
+
+	return false;
+}
+
 class Shader
 {
 public:
 	Shader() = default;
 	Shader(const std::string& filepath);
+	void ReCompile();
 	~Shader();
 	void Use() const;
 
@@ -112,6 +122,10 @@ public:
 	std::unordered_map<std::string, Uniform> GetUniformMap() const;
 	bool CheckUniformStatus(const std::string& name) const;
 
+	void AddToLookUp(const std::string name, const int& value);
+	void AddToLookUp(const std::string name, const float& value);
+	void AddToLookUp(const std::string name, const double& value);
+
 private:
 	std::tuple<std::string, std::string> ParseShader(const std::string& ShaderCode);
 	std::string GetFileDirectory(const std::string& filepath) const;
@@ -127,4 +141,6 @@ private:
 	unsigned int m_RendererID;
 	std::unordered_map<std::string, glslStruct> m_glslStructMap;
 	std::unordered_map<std::string, Uniform> m_UniformMap;
+	std::unordered_map<std::string, std::string> m_ConstantLookUpMap;
+	std::string m_PreProcessedCode;
 };

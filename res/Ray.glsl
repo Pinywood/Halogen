@@ -188,7 +188,7 @@ void Scatter(Glass glass, inout Ray ray, HitRecord record, in float seed)
 	float cos_theta = min(dot(-ray.RayDir, normal), 1.0);
 	float sin_theta = sqrt(1.0 - cos_theta * cos_theta);
 
-	if(IOR * sin_theta > 1.0 || reflectance(cos_theta, IOR) > pcg(seed + 13.0))
+	if(IOR * sin_theta > 1.0 || reflectance(cos_theta, IOR) > pcg3d(ray.RayDir + seed).x)
 		ray.RayDir = reflect(ray.RayDir, normal);
 	
 	else
@@ -225,7 +225,7 @@ void UpdateRay(inout Ray ray, HitRecord record, in float seed)
 
 vec3 ComputeRayColor(in Ray ray, in Sphere Models[ModelCount], in int max_bounces, in float seed)
 {
-	vec3 RayOffset = 2.0 * vec3(pcg3d(ray.RayDir + seed + 1.0).xy, 0.0) - 1.0;			//Make native square sampling
+	vec3 RayOffset = 2.0 * vec3(pcg3d(ray.RayDir + seed).xy, 0.0) - 1.0;			//Make native square sampling
 	float OffsetWidth = Sensor_Size / float(FramebufferWidth);
 	float OffsetHeight =  (Sensor_Size / AspectRatio) / float(FramebufferHeight);
 

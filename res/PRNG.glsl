@@ -18,24 +18,6 @@ float pcg(float u)
 	return floatConstruct((word >> 22u) ^ word);
 }
 
-vec2 pcg2d(vec2 uv)
-{
-    uvec2 v = floatBitsToUint(uv);
-    v = v * 1664525u + 1013904223u;
-
-    v.x += v.y * 1664525u;
-    v.y += v.x * 1664525u;
-
-    v = v ^ (v>>16u);
-
-    v.x += v.y * 1664525u;
-    v.y += v.x * 1664525u;
-
-    v = v ^ (v>>16u);
-
-    return vec2(floatConstruct(v.x), floatConstruct(v.y));
-}
-
 //Random vec3 in [0, 1] ^ 3
 vec3 pcg3d(vec3 uvw) 
 {

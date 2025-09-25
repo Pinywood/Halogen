@@ -112,10 +112,10 @@ void RayTracer::Render() const
 	WindowVA.Bind();
 	RTShader.Use();
 
-	for (auto& [name, uniform] : RTShader.GetUniformMap())
+	for (auto& [Setting, UniformName] : SettingUniformMap)
 	{
-		if (!RTShader.CheckUniformStatus(name) && name != "SphereList")
-			std::println("Setting {} is not set", InvSettingUniformMap.at(name));
+		if (!RTShader.CheckUniformStatus(UniformName))
+			std::println("Setting {} is not set", Setting);
 	}
 
 	glDrawElements(GL_TRIANGLES, WindowIB.GetCount(), GL_UNSIGNED_INT, nullptr);

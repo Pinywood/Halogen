@@ -197,7 +197,7 @@ int main()
 	Sphere1.material.Type = BSDFType::Glass;
 	Sphere1.material.Albedo = Vec3(1.0);
 	Sphere1.material.IOR = 1.5;
-	Sphere1.Position = Vec3(0.0, 0.0, 0.0);
+	Sphere1.Position = Vec3(0.0, 0.01, 0.0);
 	Sphere1.Radius = 1.0;
 
 	Sphere2.material.Albedo = Vec3(0.6);
@@ -205,10 +205,12 @@ int main()
 	Sphere2.Position = Vec3(0.0, -1001.0, 0.0);
 	Sphere2.Radius = 1000.0;
 
+	Sphere3.material.Type = BSDFType::Glass;
 	Sphere3.material.Albedo = Vec3(1.0);
 	Sphere3.material.Roughness = 0.0;
-	Sphere3.Position = Vec3(3.0, 0.0, 0.0);
-	Sphere3.Radius = 1.0;
+	Sphere3.material.IOR = 0.67;
+	Sphere3.Position = Vec3(0.0, 0.01, 0.0);
+	Sphere3.Radius = 0.95;
 
 	Sphere4.material.Albedo = Vec3(1.0);
 	Sphere4.material.Emission = 30.0;
@@ -222,11 +224,11 @@ int main()
 	
 	ImGuiIO& io = SetupImGui(window);
 
-	int max_bounces = 10;
+	int max_bounces = 30;
 	float Sensor_Size = 100.0;
 	float Focal_Length = 35.0;
 
-	float SunIntensity = 500.0;
+	float SunIntensity = 800.0;
 	float SunRadius = 0.8;
 	float SunAltitude = 30.0;
 	float SunAzimuthal = 0.0;
@@ -281,7 +283,7 @@ int main()
 			modified |= ImGui::SliderFloat("Sun Altitude", &SunAltitude, -90.0, 90.0);
 			modified |= ImGui::SliderFloat("Sun Azimuthal", &SunAzimuthal, 0.0, 360.0);
 			modified |= ImGui::SliderFloat("Sky Variation", &SkyVariation, 0.0f, 1.0f);
-			modified |= ImGui::SliderInt("Max Bounces", &max_bounces, 0, 30);
+			modified |= ImGui::SliderInt("Max Bounces", &max_bounces, 0, 60);
 			modified |= ImGui::SliderFloat("Sensor Size", &Sensor_Size, 35.0f, 150.0f);
 			modified |= ImGui::SliderFloat("Focal Length", &Focal_Length, 35.0f, 200.0f);
 			modified |= ImGui::SliderFloat("Sphere 1 Radius", &Sphere1.Radius, 0.0f, 1.0f);
@@ -289,7 +291,7 @@ int main()
 			modified |= ImGui::SliderFloat("Sphere 2 Radius", &Sphere3.Radius, 0.0f, 1.0f);
 			modified |= ImGui::SliderFloat("Sphere 2 Roughness", &Sphere3.material.Roughness, 0.0f, 1.0f);
 			modified |= ImGui::SliderFloat("Sphere 3 Radius", &Sphere4.Radius, 0.0f, 1.0f);
-			modified |= ImGui::SliderFloat("Sphere 3 Roughness", &Sphere4.material.Roughness, 0.0f, 1.0f);
+			modified |= ImGui::SliderFloat("Sphere 3 Emission", &Sphere4.material.Emission, 0.0f, 100.0f);
 
 			modified |= ImGui::ColorEdit3("Sphere 1 Color", (float*)&Sphere1.material.Albedo);
 			modified |= ImGui::ColorEdit3("Sphere 2 Color", (float*)&Sphere3.material.Albedo);

@@ -2,13 +2,33 @@
 
 Shader::Shader(const std::string& filepath)
 {
-	const std::string& ShaderCode = PreProcess(filepath);
-	const auto& [VertexSource, FragmentSource] = ParseShader(ShaderCode);
+	m_PreProcessedCode = PreProcess(filepath);
+	const auto& [VertexSource, FragmentSource] = ParseShader(m_PreProcessedCode);
 
 	unsigned int VertexShaderID = CompileShader(GL_VERTEX_SHADER, VertexSource);
 	unsigned int FragmentShaderID = CompileShader(GL_FRAGMENT_SHADER, FragmentSource);
 
 	m_RendererID = glCreateProgram();
+	glAttachShader(m_RendererID, VertexShaderID);
+	glAttachShader(m_RendererID, FragmentShaderID);
+	glLinkProgram(m_RendererID);
+	glValidateProgram(m_RendererID);
+
+	SetUniformLocations();
+
+	glDeleteShader(VertexShaderID);
+	glDeleteShader(FragmentShaderID);
+}
+
+void Shader::ReCompile()
+{
+	const auto& [VertexSource, FragmentSource] = ParseShader(m_PreProcessedCode);
+	unsigned int VertexShaderID = CompileShader(GL_VERTEX_SHADER, VertexSource);
+	unsigned int FragmentShaderID = CompileShader(GL_FRAGMENT_SHADER, FragmentSource);
+
+	glDeleteProgram(m_RendererID);
+	m_RendererID = glCreateProgram();
+
 	glAttachShader(m_RendererID, VertexShaderID);
 	glAttachShader(m_RendererID, FragmentShaderID);
 	glLinkProgram(m_RendererID);
@@ -158,6 +178,21 @@ bool Shader::CheckUniformStatus(const std::string& name) const
 	return false;
 }
 
+void Shader::AddToLookUp(const std::string name, const int& value)
+{
+	m_ConstantLookUpMap[name] = std::to_string(value);
+}
+
+void Shader::AddToLookUp(const std::string name, const float& value)
+{
+	m_ConstantLookUpMap[name] = std::to_string(value);
+}
+
+void Shader::AddToLookUp(const std::string name, const double& value)
+{
+	m_ConstantLookUpMap[name] = std::to_string(value);
+}
+
 std::tuple<std::string, std::string> Shader::ParseShader(const std::string& ShaderCode)
 {
 	enum class ShaderType
@@ -186,12 +221,27 @@ std::tuple<std::string, std::string> Shader::ParseShader(const std::string& Shad
 			}
 		}
 
+		else if (TokenPresent(line, "const") && TokenPresent(line, "="))
+		{
+			for (auto& [name, value] : m_ConstantLookUpMap)
+			{
+				if (TokenPresent(line, name))
+				{
+					int pos = line.find("=") + 1;
+					int end = line.find(";");
+					line.replace(pos, end - pos, value);
+				}
+			}
+
+			ss[(int)type] << line << '\n';
+		}
+
 		else
 		{
 			ss[(int)type] << line << '\n';
 		}
 
-		if (line.find("struct") != std::string::npos && line.find("//") > line.find("struct"))
+		if (TokenPresent(line, "struct"))
 		{
 			glslStruct Struct;
 			char c;
@@ -209,7 +259,7 @@ std::tuple<std::string, std::string> Shader::ParseShader(const std::string& Shad
 			m_glslStructMap[Struct.Name] = Struct;
 		}
 
-		if (line.find("uniform") != std::string::npos && line.find("//") > line.find("uniform"))
+		if (TokenPresent(line, "uniform"))
 		{
 			Uniform uniform;
 			char c;

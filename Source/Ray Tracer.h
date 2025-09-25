@@ -67,24 +67,6 @@ static const std::unordered_map<RT_Setting, std::string> SettingUniformMap =
 	std::pair(RT_Setting::Focal_Length, "Focal_Length")
 };
 
-template<typename Kout, typename Vout, typename Kin, typename Vin>
-static std::unordered_map<Kout, Vout> transformMap(const std::unordered_map<Kin, Vin>& inMap, const std::function<std::pair<Kout, Vout>(const std::pair<Kin, Vin>&)> mapfunc)
-{
-	std::unordered_map<Kout, Vout> outMap;
-	std::for_each(inMap.begin(), inMap.end(),
-		[&outMap, &mapfunc](const std::pair<Kin, Vin>& p) {
-			outMap.insert(mapfunc(p));
-		}
-	);
-	return outMap;
-}
-
-static const std::unordered_map<std::string, RT_Setting> InvSettingUniformMap = transformMap(SettingUniformMap,
-	std::function([](const std::pair<RT_Setting, std::string>& p) {
-		return std::make_pair(p.second, p.first);
-		})
-);
-
 class RayTracer
 {
 public:
