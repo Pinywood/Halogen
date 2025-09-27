@@ -15,24 +15,24 @@ class Camera
 {
 public:
 
-    glm::vec3 Position;
-    glm::vec3 Front;
-    glm::vec3 Up;
-    glm::vec3 Right;
-    glm::vec3 WorldUp;
+    glm::vec3 m_Position;
+    glm::vec3 m_Front;
+    glm::vec3 m_Up;
+    glm::vec3 m_Right;
+    glm::vec3 m_WorldUp;
 
-    float Yaw;
-    float Pitch;
+    float m_Yaw;
+    float m_Pitch;
 
     float MouseSensitivity;
 
     Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) 
-        : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MouseSensitivity(SENSITIVITY)
+        : m_Front(glm::vec3(0.0f, 0.0f, -1.0f)), MouseSensitivity(SENSITIVITY)
     {
-        Position = position;
-        WorldUp = up;
-        Yaw = yaw;
-        Pitch = pitch;
+        m_Position = position;
+        m_WorldUp = up;
+        m_Yaw = yaw;
+        m_Pitch = pitch;
         updateCameraVectors();
     }
 

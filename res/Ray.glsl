@@ -200,7 +200,7 @@ void Scatter(Glass glass, inout Ray ray, HitRecord record, in float seed)
 
 void UpdateRay(inout Ray ray, HitRecord record, in float seed)
 {
-	switch(int(record.HitSphere.Mat.Type))
+	switch(record.HitSphere.Mat.Type)
 	{
 		case DiffuseType:
 		{

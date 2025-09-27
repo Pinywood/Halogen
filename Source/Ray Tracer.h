@@ -91,29 +91,29 @@ public:
 	void Setting(const RT_Setting& setting, const T& value)
 	{
 		const std::string& name = SettingUniformMap.at(setting);
-		RTShader.SetUniform(name, value);
+		m_RTShader.SetUniform(name, value);
 	}
 
 private:
 	void UploadSpheres() const;
 
 private:
-	mutable Shader RTShader = Shader("res/Ray Trace.glsl");
-	mutable Shader AccumulationShader = Shader("res/Accumulator.glsl");
-	VertexBuffer WindowVB;
-	IndexBuffer WindowIB;
-	VertexArray WindowVA;
-	Camera camera;
+	mutable Shader m_RTShader = Shader("res/Ray Trace.glsl");
+	mutable Shader m_AccumulationShader = Shader("res/Accumulator.glsl");
+	VertexBuffer m_WindowVB;
+	IndexBuffer m_WindowIB;
+	VertexArray m_WindowVA;
+	Camera m_Camera;
 
-	Framebuffer RenderFB;
-	Framebuffer AccumulationFB;
+	Framebuffer m_RenderFB;
+	Framebuffer m_AccumulationFB;
 
-	int RenderTexSlot;
-	int AccumulationTexSlot;
-	int FramebufferWidth;
-	int FramebufferHeight;
+	int m_RenderTexSlot;
+	int m_AccumulationTexSlot;
+	int m_FramebufferWidth;
+	int m_FramebufferHeight;
 
-	int CurrentSample = 0;
+	int m_CurrentSample = 0;
 
 	std::vector<Sphere> m_SphereList;
 };

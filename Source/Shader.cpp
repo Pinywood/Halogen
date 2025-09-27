@@ -12,6 +12,21 @@ Shader::Shader(const std::string& filepath)
 	glAttachShader(m_RendererID, VertexShaderID);
 	glAttachShader(m_RendererID, FragmentShaderID);
 	glLinkProgram(m_RendererID);
+
+	int success;
+	glGetProgramiv(m_RendererID, GL_LINK_STATUS, &success);
+	if (success == GL_FALSE)
+	{
+		int length;
+		glGetProgramiv(m_RendererID, GL_INFO_LOG_LENGTH, &length);
+		char* message = (char*)alloca(length * sizeof(char));
+		glGetProgramInfoLog(m_RendererID, length, &length, message);
+		std::println("Failed To Link Shader Program");
+		std::print("{}\n", message);
+		glDeleteShader(m_RendererID);
+		return;
+	}
+
 	glValidateProgram(m_RendererID);
 
 	SetUniformLocations();
@@ -337,7 +352,7 @@ std::string Shader::ProcessIncludes(const std::string& filepath) const
 		{
 			std::string FilePathBuffer;
 			char c = ' ';
-			FilePathBuffer += GetFileDirectory(filepath);
+			FilePathBuffer = GetFileDirectory(filepath);
 
 			for (int i = line.find('"') + 1; i < line.length(); i++)
 			{
@@ -382,8 +397,8 @@ int Shader::CompileShader(unsigned int type, const std::string& source)
 		glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
 		char* message = (char*)alloca(length * sizeof(char));
 		glGetShaderInfoLog(id, length, &length, message);
-		std::cout << "Failed To Compile " << (type == GL_VERTEX_SHADER ? "Vertex" : "Fragment") << " Shader" << std::endl;
-		std::cout << message << std::endl;
+		std::println("Failed To Compile {} Shader", type == GL_VERTEX_SHADER ? "Vertex" : "Fragment");
+		std::print("{}\n", message);
 		glDeleteShader(id);
 		return 0;
 	}

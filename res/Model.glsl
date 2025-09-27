@@ -16,7 +16,7 @@ const int GlassType = 1;
 
 struct Material
 {
-	float Type;
+	int Type;
 	vec3 Albedo;
 	float Roughness;
 	float Emission;
