@@ -95,6 +95,7 @@ public:
 	}
 
 private:
+	void UploadSphere(const int& index) const;
 	void UploadSpheres() const;
 
 private:
@@ -107,6 +108,7 @@ private:
 
 	Framebuffer m_RenderFB;
 	Framebuffer m_AccumulationFB;
+	bool m_Accumulating = false;
 
 	int m_RenderTexSlot;
 	int m_AccumulationTexSlot;

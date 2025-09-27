@@ -47,6 +47,21 @@ void Shader::ReCompile()
 	glAttachShader(m_RendererID, VertexShaderID);
 	glAttachShader(m_RendererID, FragmentShaderID);
 	glLinkProgram(m_RendererID);
+
+	int success;
+	glGetProgramiv(m_RendererID, GL_LINK_STATUS, &success);
+	if (success == GL_FALSE)
+	{
+		int length;
+		glGetProgramiv(m_RendererID, GL_INFO_LOG_LENGTH, &length);
+		char* message = (char*)alloca(length * sizeof(char));
+		glGetProgramInfoLog(m_RendererID, length, &length, message);
+		std::println("Failed To Link Shader Program during recompilation");
+		std::print("{}\n", message);
+		glDeleteShader(m_RendererID);
+		return;
+	}
+
 	glValidateProgram(m_RendererID);
 
 	SetUniformLocations();

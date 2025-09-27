@@ -17,6 +17,7 @@
 #include "Ray Tracer.h"
 #include "Model.h"
 #include "Framebuffer.h"
+#include "OpenGLError.h"
 
 #include <iostream>
 #include <print>
@@ -178,6 +179,13 @@ int main()
 
 	if (glewInit() != GLEW_OK)
 		std::cout << "GLEW ERROR" << std::endl;
+
+	glEnable(GL_DEBUG_OUTPUT);
+	glDebugMessageCallback(GLMessageCallback, 0);
+	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_FALSE);
+	glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_ERROR, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+	glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+	glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 
 	glViewport(0, 0, WindowWidth, WindowHeight);
 

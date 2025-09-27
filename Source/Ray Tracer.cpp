@@ -57,24 +57,29 @@ void RayTracer::FramebufferReSize(const int& Width, const int& Height)
 void RayTracer::AddToBuffer(const Sphere& Sphere)
 {
 	m_SphereList.push_back(Sphere);
-	m_RTShader.AddToLookUp("ModelCount", (int)m_SphereList.size());
-	m_RTShader.ReCompile();
-	UploadSpheres();
+	if (!m_Accumulating)
+		return;
+
+	UploadSphere(m_SphereList.size() - 1);
 	ResetAccumulation();
 }
 
 void RayTracer::SwapBufferObject(const unsigned int& index, const Sphere& Sphere)
 {
 	m_SphereList.at(index) = Sphere;
-	UploadSpheres();
+	if (!m_Accumulating)
+		return;
+
+	UploadSphere(index);
 	ResetAccumulation();
 }
 
 void RayTracer::ClearBuffer()
 {
 	m_SphereList.clear();
-	m_RTShader.AddToLookUp("ModelCount", m_SphereList.size() == 0 ? 1 : (int)m_SphereList.size());
-	m_RTShader.ReCompile();
+	if (!m_Accumulating)
+		return;
+
 	UploadSpheres();
 	ResetAccumulation();
 }
@@ -91,19 +96,24 @@ void RayTracer::Clear(const float& Red, const float& Green, const float& Blue) c
 	glClear(GL_COLOR_BUFFER_BIT);
 }
 
+void RayTracer::UploadSphere(const int& index) const
+{
+	std::string out = std::format("SphereList[{}]", std::to_string(index));
+
+	m_RTShader.SetFloat(out + ".Position", m_SphereList.at(index).Position);
+	m_RTShader.SetFloat(out + ".Radius", m_SphereList.at(index).Radius);
+	m_RTShader.SetInt(out + ".Mat.Type", (int)m_SphereList.at(index).material.Type);
+	m_RTShader.SetFloat(out + ".Mat.Albedo", m_SphereList.at(index).material.Albedo);
+	m_RTShader.SetFloat(out + ".Mat.Roughness", m_SphereList.at(index).material.Roughness);
+	m_RTShader.SetFloat(out + ".Mat.Emission", m_SphereList.at(index).material.Emission);
+	m_RTShader.SetFloat(out + ".Mat.IOR", m_SphereList.at(index).material.IOR);
+}
+
 void RayTracer::UploadSpheres() const
 {
 	for (size_t i = 0; i < m_SphereList.size(); i++)
 	{
-		std::string out = std::format("SphereList[{}]", std::to_string(i));
-
-		m_RTShader.SetFloat(out + ".Position", m_SphereList.at(i).Position);
-		m_RTShader.SetFloat(out + ".Radius", m_SphereList.at(i).Radius);
-		m_RTShader.SetInt(out + ".Mat.Type", (int)m_SphereList.at(i).material.Type);
-		m_RTShader.SetFloat(out + ".Mat.Albedo", m_SphereList.at(i).material.Albedo);
-		m_RTShader.SetFloat(out + ".Mat.Roughness", m_SphereList.at(i).material.Roughness);
-		m_RTShader.SetFloat(out + ".Mat.Emission", m_SphereList.at(i).material.Emission);
-		m_RTShader.SetFloat(out + ".Mat.IOR", m_SphereList.at(i).material.IOR);
+		UploadSphere(i);
 	}
 }
 
@@ -123,6 +133,8 @@ void RayTracer::Render() const
 
 void RayTracer::StartAccumulation(const unsigned int& RenderSlot, const unsigned int& AccumulationSlot)
 {
+	m_Accumulating = true;
+
 	m_RenderTexSlot = RenderSlot;
 	m_AccumulationTexSlot = AccumulationSlot;
 
@@ -132,11 +144,18 @@ void RayTracer::StartAccumulation(const unsigned int& RenderSlot, const unsigned
 	m_AccumulationShader.SetUniform("CurrentSampleImage", m_RenderTexSlot);
 	m_AccumulationShader.SetUniform("Accumulated", m_AccumulationTexSlot);
 
+	UploadSpheres();
 	ResetAccumulation();
 }
 
 void RayTracer::Accumulate()
 {
+	if (!m_Accumulating)
+	{
+		std::println("Warning: Call to Accumulate without a call to StartAccumulation");
+		return;
+	}
+
 	m_RenderFB.Bind(m_RenderTexSlot);
 	m_RTShader.SetUniform("CurrentSample", m_CurrentSample);
 	Render();
@@ -152,6 +171,12 @@ void RayTracer::Accumulate()
 
 void RayTracer::ResetAccumulation()
 {
+	if (!m_Accumulating)
+	{
+		std::println("Warning: Call to ResetAccumulation without a call to StartAccumulation");
+		return;
+	}
+
 	m_CurrentSample = 0;
 	m_AccumulationFB.Bind(m_AccumulationTexSlot);
 	Clear();

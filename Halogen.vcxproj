@@ -154,6 +154,7 @@
     <ClInclude Include="Source\Framebuffer.h" />
     <ClInclude Include="Source\IndexBuffer.h" />
     <ClInclude Include="Source\Model.h" />
+    <ClInclude Include="Source\OpenGLError.h" />
     <ClInclude Include="Source\Ray Tracer.h" />
     <ClInclude Include="Source\Shader.h" />
     <ClInclude Include="Source\VectorMath.h" />

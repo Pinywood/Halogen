@@ -8,7 +8,7 @@ uniform int FramebufferWidth;
 uniform int FramebufferHeight;
 uniform float AspectRatio;
 uniform mat3 View;
-const int ModelCount = 1;
+const int ModelCount = 4;
 uniform Sphere SphereList[ModelCount];
 
 uniform float SunRadius;										//Should be in [0, 1], it is the cos of the angular radius
