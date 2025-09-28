@@ -18,7 +18,7 @@ enum class RT_Setting
 {
 	Max_Bounces,
 	Sun_Radius, Sun_Intensity, Sun_Altitude, Sun_Azimuthal, Sky_Variation,
-	Sensor_Size, Focal_Length
+	Sensor_Size, Focal_Length, Focus_Dist, F_Stop
 };
 
 template<>
@@ -50,6 +50,12 @@ struct std::formatter<RT_Setting> : std::formatter<std::string>
 		if (Setting == RT_Setting::Focal_Length)
 			return std::formatter<std::string>::format(std::format("{}", "Focal_Length"), ctx);
 
+		if (Setting == RT_Setting::Focus_Dist)
+			return std::formatter<std::string>::format(std::format("{}", "Focus_Dist"), ctx);
+
+		if (Setting == RT_Setting::F_Stop)
+			return std::formatter<std::string>::format(std::format("{}", "F_Stop"), ctx);
+
 		else
 			return std::formatter<std::string>::format(std::format("{}", "<Invalid Setting>"), ctx);
 	}
@@ -64,7 +70,9 @@ static const std::unordered_map<RT_Setting, std::string> SettingUniformMap =
 	std::pair(RT_Setting::Sun_Azimuthal, "SunAzimuthal"),
 	std::pair(RT_Setting::Sky_Variation, "SkyVariation"),
 	std::pair(RT_Setting::Sensor_Size, "Sensor_Size"),
-	std::pair(RT_Setting::Focal_Length, "Focal_Length")
+	std::pair(RT_Setting::Focal_Length, "Focal_Length"),
+	std::pair(RT_Setting::Focus_Dist, "Focus_Dist"),
+	std::pair(RT_Setting::F_Stop, "F_Stop")
 };
 
 class RayTracer
@@ -72,6 +80,7 @@ class RayTracer
 public:
 	RayTracer(const int& FramebufferWidth, const int& FramebufferHeight);
 	~RayTracer();
+	void SetDefaultSettings();
 	void FramebufferReSize(const int& Width, const int& Height);
 	void Draw() const;
 	void Render() const;
@@ -92,6 +101,11 @@ public:
 	{
 		const std::string& name = SettingUniformMap.at(setting);
 		m_RTShader.SetUniform(name, value);
+
+		if (!m_Accumulating)
+			return;
+
+		ResetAccumulation();
 	}
 
 private:

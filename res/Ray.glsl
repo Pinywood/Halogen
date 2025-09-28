@@ -223,16 +223,35 @@ void UpdateRay(inout Ray ray, HitRecord record, in float seed)
 	}
 }
 
-vec3 ComputeRayColor(in Ray ray, in Sphere Models[ModelCount], in int max_bounces, in float seed)
+Ray GetRay(vec3 PixelPos, float seed)
 {
-	vec3 RayOffset = 2.0 * vec3(pcg3d(ray.RayDir + seed).xy, 0.0) - 1.0;			//Make native square sampling
+	Ray ray;
+	ray.RayOrigin = PixelPos;
+	ray.RayColor = vec3(1.0);
+
+	vec3 RayOffset = 2.0 * vec3(pcg3d(ray.RayOrigin + seed).xy, 0.0) - 1.0;			//[Improve]: Make native square sampling
 	float OffsetWidth = Sensor_Size / float(FramebufferWidth);
 	float OffsetHeight =  (Sensor_Size / AspectRatio) / float(FramebufferHeight);
-
 	RayOffset *= vec3(OffsetWidth, OffsetHeight, 0.0);
 
-	ray.RayDir = ray.RayDir + RayOffset;
-	ray.RayDir = normalize(ray.RayDir);
+	ray.RayOrigin += RayOffset;
+
+	float LensFocalLength = Focal_Length * Focus_Dist / (Focal_Length + Focus_Dist);
+	vec3 FocusPoint = ray.RayOrigin * LensFocalLength + vec3(0.0, 0.0, Focal_Length * Focal_Length);
+	FocusPoint /= LensFocalLength - Focal_Length;
+
+	float DiskRadius = Focal_Length / (2.0 * F_Stop);
+	vec3 DiskPoint = DiskRadius * pcg3dDisk(ray.RayOrigin + seed + 1.0) + vec3(0.0, 0.0, -Focal_Length);
+
+	ray.RayOrigin = DiskPoint;
+	ray.RayDir = normalize(FocusPoint - ray.RayOrigin);
+
+	return ray;
+}
+
+vec3 TraceRay(in Ray ray, in Sphere Models[ModelCount], in int max_bounces, in float seed)
+{
+	ray = GetRay(ray.RayOrigin, seed);
 
 	for(int bounces = 0; bounces < max_bounces; bounces++)
 	{

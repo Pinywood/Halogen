@@ -9,7 +9,7 @@ out vec2 f_TexCoords;
 void main()
 {
 	gl_Position = vec4(vertexPositions, 0.0, 1.0);
-	f_TexCoords = v_TexCoords;
+	f_TexCoords = 1.0 - v_TexCoords;
 }
 
 #shader fragment

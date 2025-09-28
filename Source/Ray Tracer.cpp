@@ -35,10 +35,37 @@ RayTracer::RayTracer(const int& FramebufferWidth, const int& FramebufferHeight)
 	m_WindowIB.Bind();
 
 	m_SphereList.reserve(2);
+	SetDefaultSettings();
 }
 
 RayTracer::~RayTracer()
 {
+}
+
+void RayTracer::SetDefaultSettings()
+{
+	int max_bounces = 30;
+	float Sensor_Size = 100.0;
+	float Focal_Length = 35.0;
+	float Focus_Dist = 1.0;
+	float F_Stop = 1.4;
+
+	float SunIntensity = 800.0;
+	float SunRadius = 0.8;
+	float SunAltitude = 30.0;
+	float SunAzimuthal = 0.0;
+	float SkyVariation = 0.2;
+
+	Setting(RT_Setting::Sun_Radius, SunRadius / 200.0);
+	Setting(RT_Setting::Sun_Intensity, SunIntensity);
+	Setting(RT_Setting::Sun_Altitude, glm::radians(SunAltitude));
+	Setting(RT_Setting::Sun_Azimuthal, glm::radians(SunAzimuthal));
+	Setting(RT_Setting::Sky_Variation, SkyVariation);
+	Setting(RT_Setting::Max_Bounces, max_bounces);
+	Setting(RT_Setting::Sensor_Size, Sensor_Size / 1000.0);
+	Setting(RT_Setting::Focal_Length, Focal_Length / 1000.0);
+	Setting(RT_Setting::Focus_Dist, Focus_Dist);
+	Setting(RT_Setting::F_Stop, F_Stop);
 }
 
 void RayTracer::FramebufferReSize(const int& Width, const int& Height)

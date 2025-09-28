@@ -1,6 +1,8 @@
 uniform float Sensor_Size;
 uniform float Focal_Length;
 uniform vec3 CameraPos;
+uniform float Focus_Dist;
+uniform float F_Stop;
 
 uniform int CurrentSample;
 uniform int max_bounces;

@@ -213,12 +213,10 @@ int main()
 	Sphere2.Position = Vec3(0.0, -1001.0, 0.0);
 	Sphere2.Radius = 1000.0;
 
-	Sphere3.material.Type = BSDFType::Glass;
 	Sphere3.material.Albedo = Vec3(1.0);
 	Sphere3.material.Roughness = 0.0;
-	Sphere3.material.IOR = 0.67;
-	Sphere3.Position = Vec3(0.0, 0.01, 0.0);
-	Sphere3.Radius = 0.95;
+	Sphere3.Position = Vec3(3.0, 0.0, 0.0);
+	Sphere3.Radius = 1.0;
 
 	Sphere4.material.Albedo = Vec3(1.0);
 	Sphere4.material.Emission = 30.0;
@@ -235,6 +233,8 @@ int main()
 	int max_bounces = 30;
 	float Sensor_Size = 100.0;
 	float Focal_Length = 35.0;
+	float Focus_Dist = 1.0;
+	float F_Stop = 1.4;
 
 	float SunIntensity = 800.0;
 	float SunRadius = 0.8;
@@ -294,6 +294,8 @@ int main()
 			modified |= ImGui::SliderInt("Max Bounces", &max_bounces, 0, 60);
 			modified |= ImGui::SliderFloat("Sensor Size", &Sensor_Size, 35.0f, 150.0f);
 			modified |= ImGui::SliderFloat("Focal Length", &Focal_Length, 35.0f, 200.0f);
+			modified |= ImGui::SliderFloat("Focus Distance", &Focus_Dist, 0.0f, 5.0f);
+			modified |= ImGui::SliderFloat("F-Stop", &F_Stop, 0.0f, 2.0f);
 			modified |= ImGui::SliderFloat("Sphere 1 Radius", &Sphere1.Radius, 0.0f, 1.0f);
 			modified |= ImGui::SliderFloat("Sphere 1 Roughness", &Sphere1.material.Roughness, 0.0f, 1.0f);
 			modified |= ImGui::SliderFloat("Sphere 2 Radius", &Sphere3.Radius, 0.0f, 1.0f);
@@ -316,6 +318,17 @@ int main()
 				RayTracer.SwapBufferObject(1, Sphere2);
 				RayTracer.SwapBufferObject(2, Sphere3);
 				RayTracer.SwapBufferObject(3, Sphere4);
+
+				RayTracer.Setting(RT_Setting::Sun_Radius, SunRadius / 200.0);
+				RayTracer.Setting(RT_Setting::Sun_Intensity, SunIntensity);
+				RayTracer.Setting(RT_Setting::Sun_Altitude, glm::radians(SunAltitude));
+				RayTracer.Setting(RT_Setting::Sun_Azimuthal, glm::radians(SunAzimuthal));
+				RayTracer.Setting(RT_Setting::Sky_Variation, SkyVariation);
+				RayTracer.Setting(RT_Setting::Max_Bounces, max_bounces);
+				RayTracer.Setting(RT_Setting::Sensor_Size, Sensor_Size / 1000.0);
+				RayTracer.Setting(RT_Setting::Focal_Length, Focal_Length / 1000.0);
+				RayTracer.Setting(RT_Setting::Focus_Dist, Focus_Dist);
+				RayTracer.Setting(RT_Setting::F_Stop, F_Stop);
 			}
 
 			std::stringstream ss;
@@ -325,15 +338,6 @@ int main()
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 			ImGui::End();
 		}
-
-		RayTracer.Setting(RT_Setting::Sun_Radius, SunRadius / 200.0);
-		RayTracer.Setting(RT_Setting::Sun_Intensity, SunIntensity);
-		RayTracer.Setting(RT_Setting::Sun_Altitude, glm::radians(SunAltitude));
-		RayTracer.Setting(RT_Setting::Sun_Azimuthal, glm::radians(SunAzimuthal));
-		RayTracer.Setting(RT_Setting::Sky_Variation, SkyVariation);
-		RayTracer.Setting(RT_Setting::Max_Bounces, max_bounces);
-		RayTracer.Setting(RT_Setting::Sensor_Size, Sensor_Size / 1000.0);
-		RayTracer.Setting(RT_Setting::Focal_Length, Focal_Length / 1000.0);
 
 		RayTracer.Accumulate();
 		RayTracer.Accumulate();

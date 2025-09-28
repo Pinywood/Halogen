@@ -32,7 +32,6 @@ struct std::formatter<GLMessageType> : std::formatter<std::string>
 
 enum class GLMessageSeverity
 {
-
     High = GL_DEBUG_SEVERITY_HIGH,
     Medium = GL_DEBUG_SEVERITY_MEDIUM,
     Low = GL_DEBUG_SEVERITY_LOW,
