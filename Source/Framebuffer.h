@@ -32,5 +32,5 @@ private:
 	unsigned int m_RendererID;
 	int m_Width;
 	int m_Height;
-	FrameBufferTexture Texture;
+	FrameBufferTexture m_Texture;
 };

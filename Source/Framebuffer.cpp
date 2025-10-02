@@ -40,10 +40,10 @@ Framebuffer::Framebuffer(const int& Width, const int& Height)
 	:m_Width(Width), m_Height(Height)
 {
 	glGenFramebuffers(1, &m_RendererID);
-	Texture.GenerateTexture(m_Width, m_Height);
+	m_Texture.GenerateTexture(m_Width, m_Height);
 
 	Bind();
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, Texture.m_RendererID, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_Texture.m_RendererID, 0);
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::println("Framebuffer incomplete");
@@ -56,10 +56,10 @@ void Framebuffer::ReSize(const int& Width, const int& Height)
 	m_Width = Width;
 	m_Height = Height;
 
-	Texture.GenerateTexture(m_Width, m_Height);
+	m_Texture.GenerateTexture(m_Width, m_Height);
 
 	Bind();
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, Texture.m_RendererID, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_Texture.m_RendererID, 0);
 
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		std::println("Framebuffer incomplete");
@@ -70,7 +70,7 @@ void Framebuffer::ReSize(const int& Width, const int& Height)
 void Framebuffer::Bind(const int& slot) const
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
-	Texture.Bind(slot);
+	m_Texture.Bind(slot);
 }
 
 void Framebuffer::UnBind() const

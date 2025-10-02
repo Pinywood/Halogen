@@ -81,9 +81,10 @@ void RayTracer::FramebufferReSize(const int& Width, const int& Height)
 	m_RTShader.SetUniform("FramebufferHeight", m_FramebufferHeight);
 }
 
-void RayTracer::AddToBuffer(const Sphere& Sphere)
+void RayTracer::AddToBuffer(const std::string& name, const Sphere& Sphere)
 {
 	m_SphereList.push_back(Sphere);
+	m_SphereIndexMap[name] = m_SphereList.size() - 1;
 	if (!m_Accumulating)
 		return;
 
@@ -91,8 +92,9 @@ void RayTracer::AddToBuffer(const Sphere& Sphere)
 	ResetAccumulation();
 }
 
-void RayTracer::SwapBufferObject(const unsigned int& index, const Sphere& Sphere)
+void RayTracer::SwapBufferObject(const std::string& name, const Sphere& Sphere)
 {
+	int index = m_SphereIndexMap.at(name);
 	m_SphereList.at(index) = Sphere;
 	if (!m_Accumulating)
 		return;
@@ -104,6 +106,7 @@ void RayTracer::SwapBufferObject(const unsigned int& index, const Sphere& Sphere
 void RayTracer::ClearBuffer()
 {
 	m_SphereList.clear();
+	m_SphereIndexMap.clear();
 	if (!m_Accumulating)
 		return;
 

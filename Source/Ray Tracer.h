@@ -88,8 +88,8 @@ public:
 	void Accumulate();
 	void ResetAccumulation();
 	void Clear(const float& Red = 0.0f, const float& Green = 0.0f, const float& Blue = 0.0f) const;
-	void AddToBuffer(const Sphere& Sphere);
-	void SwapBufferObject(const unsigned int& index, const Sphere& Sphere);
+	void AddToBuffer(const std::string& name, const Sphere& Sphere);
+	void SwapBufferObject(const std::string& name, const Sphere& Sphere);
 	void ClearBuffer();
 	unsigned int RenderedSamples() const;
 
@@ -132,4 +132,5 @@ private:
 	int m_CurrentSample = 0;
 
 	std::vector<Sphere> m_SphereList;
+	std::unordered_map<std::string, int> m_SphereIndexMap;
 };

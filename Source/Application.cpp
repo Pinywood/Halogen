@@ -187,6 +187,10 @@ int main()
 	glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 	glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 
+	std::println("OpenGL Version: {}", (char*)glGetString(GL_VERSION));
+	std::println("OpenGL Implementation: {}", (char*)glGetString(GL_VENDOR));
+	std::println("Rendering Using: {}", (char*)glGetString(GL_RENDERER));
+
 	glViewport(0, 0, WindowWidth, WindowHeight);
 
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -197,36 +201,36 @@ int main()
 
 	RayTracer RayTracer(WindowWidth, WindowHeight);
 
-	Sphere Sphere1;
-	Sphere Sphere2;
-	Sphere Sphere3;
-	Sphere Sphere4;
+	Sphere GlassSphere;
+	Sphere Ground;
+	Sphere MetalSphere;
+	Sphere EmissiveSphere;
 
-	Sphere1.material.Type = BSDFType::Glass;
-	Sphere1.material.Albedo = Vec3(1.0);
-	Sphere1.material.IOR = 1.5;
-	Sphere1.Position = Vec3(0.0, 0.01, 0.0);
-	Sphere1.Radius = 1.0;
+	GlassSphere.material.Type = BSDFType::Glass;
+	GlassSphere.material.Albedo = Vec3(1.0);
+	GlassSphere.material.IOR = 1.5;
+	GlassSphere.Position = Vec3(0.0, 0.01, 0.0);
+	GlassSphere.Radius = 1.0;
 
-	Sphere2.material.Albedo = Vec3(0.6);
-	Sphere2.material.Roughness = 0.9;
-	Sphere2.Position = Vec3(0.0, -1001.0, 0.0);
-	Sphere2.Radius = 1000.0;
+	Ground.material.Albedo = Vec3(0.6);
+	Ground.material.Roughness = 0.9;
+	Ground.Position = Vec3(0.0, -1001.0, 0.0);
+	Ground.Radius = 1000.0;
 
-	Sphere3.material.Albedo = Vec3(1.0);
-	Sphere3.material.Roughness = 0.0;
-	Sphere3.Position = Vec3(3.0, 0.0, 0.0);
-	Sphere3.Radius = 1.0;
+	MetalSphere.material.Albedo = Vec3(1.0);
+	MetalSphere.material.Roughness = 0.0;
+	MetalSphere.Position = Vec3(3.0, 0.0, 0.0);
+	MetalSphere.Radius = 1.0;
 
-	Sphere4.material.Albedo = Vec3(1.0);
-	Sphere4.material.Emission = 30.0;
-	Sphere4.Position = Vec3(1.5, 0.0, -2.0);
-	Sphere4.Radius = 1.0;
+	EmissiveSphere.material.Albedo = Vec3(1.0);
+	EmissiveSphere.material.Emission = 30.0;
+	EmissiveSphere.Position = Vec3(1.5, 0.0, -2.0);
+	EmissiveSphere.Radius = 1.0;
 
-	RayTracer.AddToBuffer(Sphere1);
-	RayTracer.AddToBuffer(Sphere2);
-	RayTracer.AddToBuffer(Sphere3);
-	RayTracer.AddToBuffer(Sphere4);
+	RayTracer.AddToBuffer("Glass", GlassSphere);
+	RayTracer.AddToBuffer("Ground", Ground);
+	RayTracer.AddToBuffer("Metal", MetalSphere);
+	RayTracer.AddToBuffer("Emission", EmissiveSphere);
 	
 	ImGuiIO& io = SetupImGui(window);
 
@@ -296,28 +300,28 @@ int main()
 			modified |= ImGui::SliderFloat("Focal Length", &Focal_Length, 35.0f, 200.0f);
 			modified |= ImGui::SliderFloat("Focus Distance", &Focus_Dist, 0.0f, 5.0f);
 			modified |= ImGui::SliderFloat("F-Stop", &F_Stop, 0.0f, 2.0f);
-			modified |= ImGui::SliderFloat("Sphere 1 Radius", &Sphere1.Radius, 0.0f, 1.0f);
-			modified |= ImGui::SliderFloat("Sphere 1 Roughness", &Sphere1.material.Roughness, 0.0f, 1.0f);
-			modified |= ImGui::SliderFloat("Sphere 2 Radius", &Sphere3.Radius, 0.0f, 1.0f);
-			modified |= ImGui::SliderFloat("Sphere 2 Roughness", &Sphere3.material.Roughness, 0.0f, 1.0f);
-			modified |= ImGui::SliderFloat("Sphere 3 Radius", &Sphere4.Radius, 0.0f, 1.0f);
-			modified |= ImGui::SliderFloat("Sphere 3 Emission", &Sphere4.material.Emission, 0.0f, 100.0f);
+			modified |= ImGui::SliderFloat("Sphere 1 Radius", &GlassSphere.Radius, 0.0f, 1.0f);
+			modified |= ImGui::SliderFloat("Sphere 1 Roughness", &GlassSphere.material.Roughness, 0.0f, 1.0f);
+			modified |= ImGui::SliderFloat("Sphere 2 Radius", &MetalSphere.Radius, 0.0f, 1.0f);
+			modified |= ImGui::SliderFloat("Sphere 2 Roughness", &MetalSphere.material.Roughness, 0.0f, 1.0f);
+			modified |= ImGui::SliderFloat("Sphere 3 Radius", &EmissiveSphere.Radius, 0.0f, 1.0f);
+			modified |= ImGui::SliderFloat("Sphere 3 Emission", &EmissiveSphere.material.Emission, 0.0f, 100.0f);
 
-			modified |= ImGui::ColorEdit3("Sphere 1 Color", (float*)&Sphere1.material.Albedo);
-			modified |= ImGui::ColorEdit3("Sphere 2 Color", (float*)&Sphere3.material.Albedo);
-			modified |= ImGui::ColorEdit3("Sphere 3 Color", (float*)&Sphere4.material.Albedo);
-			modified |= ImGui::ColorEdit3("Ground Color", (float*)&Sphere2.material.Albedo);
-			modified |= ImGui::SliderFloat("Ground Roughness", &Sphere2.material.Roughness, 0.0f, 1.0f);
+			modified |= ImGui::ColorEdit3("Sphere 1 Color", (float*)&GlassSphere.material.Albedo);
+			modified |= ImGui::ColorEdit3("Sphere 2 Color", (float*)&MetalSphere.material.Albedo);
+			modified |= ImGui::ColorEdit3("Sphere 3 Color", (float*)&EmissiveSphere.material.Albedo);
+			modified |= ImGui::ColorEdit3("Ground Color", (float*)&Ground.material.Albedo);
+			modified |= ImGui::SliderFloat("Ground Roughness", &Ground.material.Roughness, 0.0f, 1.0f);
 
 			ImGui::SliderFloat("Exposure", &exposure, 0.0, 1.0);
 			ImGui::SliderFloat("Gamma", &gamma, 0.0, 3.0);
 
 			if (modified)
 			{
-				RayTracer.SwapBufferObject(0, Sphere1);
-				RayTracer.SwapBufferObject(1, Sphere2);
-				RayTracer.SwapBufferObject(2, Sphere3);
-				RayTracer.SwapBufferObject(3, Sphere4);
+				RayTracer.SwapBufferObject("Glass", GlassSphere);
+				RayTracer.SwapBufferObject("Ground", Ground);
+				RayTracer.SwapBufferObject("Metal", MetalSphere);
+				RayTracer.SwapBufferObject("Emission", EmissiveSphere);
 
 				RayTracer.Setting(RT_Setting::Sun_Radius, SunRadius / 200.0);
 				RayTracer.Setting(RT_Setting::Sun_Intensity, SunIntensity);
