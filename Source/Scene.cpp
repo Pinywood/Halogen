@@ -90,11 +90,15 @@ std::string Scene::GetSphereName(const std::string& line, const int& LineNumber,
 void Scene::ParseTargetSpheres(std::string& TargetName, const std::string& line, const int& LineNumber, const std::string& filepath)
 {
 	if (line.find(":") != std::string::npos)
+	{
 		TargetName = GetSphereName(line, LineNumber, filepath);
+		if (TargetName.empty())
+			std::println("SCENE FILE PARSE FAILED: No target name at line {} in {}", LineNumber, filepath);
+	}
 
-	if (TargetName.empty())
+	if (line.find_first_not_of(' ') != std::string::npos && TargetName.empty())
 		std::println("SCENE FILE PARSE FAILED: No target name at line {} in {}", LineNumber, filepath);
-
+	
 	else if (TokenPresent(line, "Position"))
 	{
 		if (!EqualPresent(line, LineNumber, filepath))
