@@ -13,6 +13,7 @@
 #include <gtc/type_ptr.hpp>
 
 #include "VectorMath.h"
+#include "Tokenization.h"
 
 #include <iostream>
 #include <print>
@@ -70,27 +71,43 @@ const std::unordered_map<std::string, glslType> glslTypeMap =
 	std::pair("sampler2D", glslType::glslInt)
 };
 
-struct Uniform
+class Uniform
 {
+public:
 	int Location = -1;
 	glslType Type = glslType::None;
 	bool Is_Array = false;
 	bool Set = false;
+
+	union
+	{
+		int IntValue;
+		float FloatValue;
+		Vec2 Vec2Value;
+		Vec3 Vec3Value;
+		glm::mat3 Mat3Value;
+		glm::mat4 Mat4Value;
+	};
+
+public:
+	Uniform()
+		:Mat4Value(glm::mat4(0.0))
+	{
+	}
+
+	void SetValue(const int& value);
+	void SetValue(const float& value);
+	void SetValue(const double& value);
+	void SetValue(const Vec2& value);
+	void SetValue(const Vec3& value);
+	void SetValue(const glm::mat3& value);
+	void SetValue(const glm::mat4& value);
 };
 
 struct glslStruct
 {
 	std::string Name;
 };
-
-static bool TokenPresent(const std::string& string, const std::string& token)
-{
-	const auto& found = string.find(token);
-	if (found != std::string::npos && found < string.find("//"))
-		return true;
-
-	return false;
-}
 
 class Shader
 {
@@ -123,19 +140,21 @@ public:
 	bool CheckUniformStatus(const std::string& name) const;
 
 	void AddToLookUp(const std::string name, const int& value);
+	void AddToLookUp(const std::string name, const size_t& value);
 	void AddToLookUp(const std::string name, const float& value);
 	void AddToLookUp(const std::string name, const double& value);
 
 private:
 	std::tuple<std::string, std::string> ParseShader(const std::string& ShaderCode);
+	std::tuple<std::string, std::string> ParseConstants(const std::string& ShaderCode);
+	void SetCachedUniforms();
 	std::string GetFileDirectory(const std::string& filepath) const;
 	std::string ProcessIncludes(const std::string& filepath) const;
 	std::string PreProcess(const std::string& filepath) const;
 	int CompileShader(unsigned int type, const std::string& source);
 	void SetUniformLocations();
 
-	template<typename ...argTypes>
-	int SetUniformTemplate(const std::string& name, const glslType& Type, std::function<void(int, argTypes...)> glFunc, argTypes ...args);
+	bool CheckUniformValidity(const std::string& name, const glslType& Type);
 
 private:
 	unsigned int m_RendererID;
@@ -143,4 +162,5 @@ private:
 	std::unordered_map<std::string, Uniform> m_UniformMap;
 	std::unordered_map<std::string, std::string> m_ConstantLookUpMap;
 	std::string m_PreProcessedCode;
+	std::string m_filepath;
 };

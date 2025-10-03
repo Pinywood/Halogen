@@ -33,6 +33,26 @@ void Camera::Turn(float xoffset, float yoffset, GLboolean constrainPitch)
     updateCameraVectors();
 }
 
+void Camera::SetOrientation(const float& yaw, const float& pitch)
+{
+    m_Yaw = yaw;
+    m_Pitch = pitch;
+
+    updateCameraVectors();
+}
+
+void Camera::SetYaw(const float& yaw)
+{
+    m_Yaw = yaw;
+    updateCameraVectors();
+}
+
+void Camera::SetPitch(const float& pitch)
+{
+    m_Pitch = pitch;
+    updateCameraVectors();
+}
+
 void Camera::updateCameraVectors()
 {
     glm::vec3 front;

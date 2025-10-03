@@ -56,6 +56,9 @@ void RayTracer::SetDefaultSettings()
 	float SunAzimuthal = 0.0;
 	float SkyVariation = 0.2;
 
+	float gamma = 2.2;
+	float exposure = 1.5;
+
 	Setting(RT_Setting::Sun_Radius, SunRadius / 200.0);
 	Setting(RT_Setting::Sun_Intensity, SunIntensity);
 	Setting(RT_Setting::Sun_Altitude, glm::radians(SunAltitude));
@@ -66,6 +69,8 @@ void RayTracer::SetDefaultSettings()
 	Setting(RT_Setting::Focal_Length, Focal_Length / 1000.0);
 	Setting(RT_Setting::Focus_Dist, Focus_Dist);
 	Setting(RT_Setting::F_Stop, F_Stop);
+	Setting(PostProcess_Setting::Gamma, gamma);
+	Setting(PostProcess_Setting::Exposure, exposure);
 }
 
 void RayTracer::FramebufferReSize(const int& Width, const int& Height)
@@ -85,9 +90,12 @@ void RayTracer::AddToBuffer(const std::string& name, const Sphere& Sphere)
 {
 	m_SphereList.push_back(Sphere);
 	m_SphereIndexMap[name] = m_SphereList.size() - 1;
+
 	if (!m_Accumulating)
 		return;
 
+	m_RTShader.AddToLookUp("ModelCount", m_SphereList.size());
+	m_RTShader.ReCompile();
 	UploadSphere(m_SphereList.size() - 1);
 	ResetAccumulation();
 }
@@ -110,6 +118,8 @@ void RayTracer::ClearBuffer()
 	if (!m_Accumulating)
 		return;
 
+	m_RTShader.AddToLookUp("ModelCount", m_SphereList.size());
+	m_RTShader.ReCompile();
 	UploadSpheres();
 	ResetAccumulation();
 }
@@ -174,6 +184,10 @@ void RayTracer::StartAccumulation(const unsigned int& RenderSlot, const unsigned
 	m_AccumulationShader.SetUniform("CurrentSampleImage", m_RenderTexSlot);
 	m_AccumulationShader.SetUniform("Accumulated", m_AccumulationTexSlot);
 
+	m_PostProcessShader.SetUniform("Image", m_AccumulationTexSlot);
+
+	m_RTShader.AddToLookUp("ModelCount", m_SphereList.size());
+	m_RTShader.ReCompile();
 	UploadSpheres();
 	ResetAccumulation();
 }
@@ -213,21 +227,81 @@ void RayTracer::ResetAccumulation()
 	m_AccumulationFB.UnBind();
 }
 
+void RayTracer::PostProcess()
+{
+	m_RenderFB.Bind(m_RenderTexSlot);
+	m_PostProcessShader.Use();
+
+	Draw();
+	m_RenderFB.UnBind();
+}
+
 unsigned int RayTracer::RenderedSamples() const
 {
 	return m_CurrentSample;
+}
+
+void RayTracer::SetCameraPosition(const glm::vec3& Position)
+{
+	m_Camera.m_Position = Position;
+	m_RTShader.SetUniform("CameraPos", Vec3(m_Camera.m_Position.x, m_Camera.m_Position.y, m_Camera.m_Position.z));
+}
+
+void RayTracer::SetCameraOrientation(const float& yaw, const float& pitch)
+{
+	m_Camera.SetOrientation(yaw, pitch);
+	m_RTShader.SetUniform("View", m_Camera.GetViewMatrix());
 }
 
 void RayTracer::MoveCamera(const float& deltaX, const float& deltaY, const float& deltaZ)
 {
 	m_Camera.Move(deltaX, deltaY, deltaZ);
 	m_RTShader.SetUniform("CameraPos", Vec3(m_Camera.m_Position.x, m_Camera.m_Position.y, m_Camera.m_Position.z));
-	ResetAccumulation();
 }
 
 void RayTracer::TurnCamera(const float& xoffset, const float& yoffset)
 {
 	m_Camera.Turn(xoffset, yoffset);
 	m_RTShader.SetUniform("View", m_Camera.GetViewMatrix());
-	ResetAccumulation();
+}
+
+void RayTracer::LoadScene(const Scene& scene)
+{
+	int max_bounces = scene.m_MaxBounces;
+	float Sensor_Size = scene.m_SensorSize;
+	float Focal_Length = scene.m_FocalLength;
+	float Focus_Dist = scene.m_FocusDist;
+	float F_Stop = scene.m_FStop;
+
+	float SunIntensity = scene.m_SunIntensity;
+	float SunRadius = scene.m_SunRadius;
+	float SunAltitude = scene.m_SunAltitude;
+	float SunAzimuthal = scene.m_SunAzimuthal;
+	float SkyVariation = scene.m_SkyVariation;
+
+	float gamma = scene.m_Gamma;
+	float exposure = scene.m_Exposure;
+
+	Setting(RT_Setting::Sun_Radius, SunRadius / 200.0);
+	Setting(RT_Setting::Sun_Intensity, SunIntensity);
+	Setting(RT_Setting::Sun_Altitude, glm::radians(SunAltitude));
+	Setting(RT_Setting::Sun_Azimuthal, glm::radians(SunAzimuthal));
+	Setting(RT_Setting::Sky_Variation, SkyVariation);
+	Setting(RT_Setting::Max_Bounces, max_bounces);
+	Setting(RT_Setting::Sensor_Size, Sensor_Size / 1000.0);
+	Setting(RT_Setting::Focal_Length, Focal_Length / 1000.0);
+	Setting(RT_Setting::Focus_Dist, Focus_Dist);
+	Setting(RT_Setting::F_Stop, F_Stop);
+	Setting(PostProcess_Setting::Gamma, gamma);
+	Setting(PostProcess_Setting::Exposure, exposure);
+
+	ClearBuffer();
+
+	for (auto& [name, sphere] : scene.m_SphereMap)
+	{
+		AddToBuffer(name, sphere);
+	}
+
+	SetCameraOrientation(scene.m_Camera.m_Yaw, scene.m_Camera.m_Pitch);
+	SetCameraPosition(scene.m_Camera.m_Position);
 }

@@ -18,6 +18,7 @@
 #include "Model.h"
 #include "Framebuffer.h"
 #include "OpenGLError.h"
+#include "Scene.h"
 
 #include <iostream>
 #include <print>
@@ -189,7 +190,7 @@ int main()
 
 	std::println("OpenGL Version: {}", (char*)glGetString(GL_VERSION));
 	std::println("OpenGL Implementation: {}", (char*)glGetString(GL_VENDOR));
-	std::println("Rendering Using: {}", (char*)glGetString(GL_RENDERER));
+	std::println("Rendering Using: {}\n", (char*)glGetString(GL_RENDERER));
 
 	glViewport(0, 0, WindowWidth, WindowHeight);
 
@@ -200,61 +201,31 @@ int main()
 	glfwSwapInterval(1);
 
 	RayTracer RayTracer(WindowWidth, WindowHeight);
+	Scene scene("res/Scene.hgns");
+	RayTracer.LoadScene(scene);
 
-	Sphere GlassSphere;
-	Sphere Ground;
-	Sphere MetalSphere;
-	Sphere EmissiveSphere;
-
-	GlassSphere.material.Type = BSDFType::Glass;
-	GlassSphere.material.Albedo = Vec3(1.0);
-	GlassSphere.material.IOR = 1.5;
-	GlassSphere.Position = Vec3(0.0, 0.01, 0.0);
-	GlassSphere.Radius = 1.0;
-
-	Ground.material.Albedo = Vec3(0.6);
-	Ground.material.Roughness = 0.9;
-	Ground.Position = Vec3(0.0, -1001.0, 0.0);
-	Ground.Radius = 1000.0;
-
-	MetalSphere.material.Albedo = Vec3(1.0);
-	MetalSphere.material.Roughness = 0.0;
-	MetalSphere.Position = Vec3(3.0, 0.0, 0.0);
-	MetalSphere.Radius = 1.0;
-
-	EmissiveSphere.material.Albedo = Vec3(1.0);
-	EmissiveSphere.material.Emission = 30.0;
-	EmissiveSphere.Position = Vec3(1.5, 0.0, -2.0);
-	EmissiveSphere.Radius = 1.0;
-
-	RayTracer.AddToBuffer("Glass", GlassSphere);
-	RayTracer.AddToBuffer("Ground", Ground);
-	RayTracer.AddToBuffer("Metal", MetalSphere);
-	RayTracer.AddToBuffer("Emission", EmissiveSphere);
-	
 	ImGuiIO& io = SetupImGui(window);
 
-	int max_bounces = 30;
-	float Sensor_Size = 100.0;
-	float Focal_Length = 35.0;
-	float Focus_Dist = 1.0;
-	float F_Stop = 1.4;
+	int max_bounces = scene.m_MaxBounces;
+	float Sensor_Size = scene.m_SensorSize;
+	float Focal_Length = scene.m_FocalLength;
+	float Focus_Dist = scene.m_FocusDist;
+	float F_Stop = scene.m_FStop;
 
-	float SunIntensity = 800.0;
-	float SunRadius = 0.8;
-	float SunAltitude = 30.0;
-	float SunAzimuthal = 0.0;
-	float SkyVariation = 0.2;
+	float SunIntensity = scene.m_SunIntensity;
+	float SunRadius = scene.m_SunRadius;
+	float SunAltitude = scene.m_SunAltitude;
+	float SunAzimuthal = scene.m_SunAzimuthal;
+	float SkyVariation = scene.m_SkyVariation;
 
-	float gamma = 2.2;
-	float exposure = 0.3;
-
-	Shader Display("res/Display.glsl");
+	float gamma = scene.m_Gamma;
+	float exposure = scene.m_Exposure;
 
 	const int RenderedImage = 1;						//TexSlot 0 is used for binding through indirect calls (like resize)
 	const int AccumulatedImage = 2;
 
-	Display.SetUniform("Image", AccumulatedImage);
+	Shader Display("res/Display.glsl");
+	Display.SetUniform("Image", RenderedImage);
 
 	RayTracer.StartAccumulation(RenderedImage, AccumulatedImage);
 
@@ -266,11 +237,17 @@ int main()
 		if (Resized)
 			RayTracer.FramebufferReSize(WindowWidth, WindowHeight);
 
-		if(Turn)
+		if (Turn)
+		{
 			RayTracer.TurnCamera(xoffset, yoffset);
+			RayTracer.ResetAccumulation();
+		}
 
-		if(Move)
+		if (Move)
+		{
 			RayTracer.MoveCamera(deltaX, deltaY, deltaZ);
+			RayTracer.ResetAccumulation();
+		}
 
 		Resized = false;
 		Turn = false;
@@ -300,29 +277,14 @@ int main()
 			modified |= ImGui::SliderFloat("Focal Length", &Focal_Length, 35.0f, 200.0f);
 			modified |= ImGui::SliderFloat("Focus Distance", &Focus_Dist, 0.0f, 5.0f);
 			modified |= ImGui::SliderFloat("F-Stop", &F_Stop, 0.0f, 2.0f);
-			modified |= ImGui::SliderFloat("Sphere 1 Radius", &GlassSphere.Radius, 0.0f, 1.0f);
-			modified |= ImGui::SliderFloat("Sphere 1 Roughness", &GlassSphere.material.Roughness, 0.0f, 1.0f);
-			modified |= ImGui::SliderFloat("Sphere 2 Radius", &MetalSphere.Radius, 0.0f, 1.0f);
-			modified |= ImGui::SliderFloat("Sphere 2 Roughness", &MetalSphere.material.Roughness, 0.0f, 1.0f);
-			modified |= ImGui::SliderFloat("Sphere 3 Radius", &EmissiveSphere.Radius, 0.0f, 1.0f);
-			modified |= ImGui::SliderFloat("Sphere 3 Emission", &EmissiveSphere.material.Emission, 0.0f, 100.0f);
 
-			modified |= ImGui::ColorEdit3("Sphere 1 Color", (float*)&GlassSphere.material.Albedo);
-			modified |= ImGui::ColorEdit3("Sphere 2 Color", (float*)&MetalSphere.material.Albedo);
-			modified |= ImGui::ColorEdit3("Sphere 3 Color", (float*)&EmissiveSphere.material.Albedo);
-			modified |= ImGui::ColorEdit3("Ground Color", (float*)&Ground.material.Albedo);
-			modified |= ImGui::SliderFloat("Ground Roughness", &Ground.material.Roughness, 0.0f, 1.0f);
-
-			ImGui::SliderFloat("Exposure", &exposure, 0.0, 1.0);
+			ImGui::SliderFloat("Exposure", &exposure, 0.0, 3.0);
 			ImGui::SliderFloat("Gamma", &gamma, 0.0, 3.0);
+			RayTracer.Setting(PostProcess_Setting::Gamma, gamma);
+			RayTracer.Setting(PostProcess_Setting::Exposure, exposure);
 
 			if (modified)
 			{
-				RayTracer.SwapBufferObject("Glass", GlassSphere);
-				RayTracer.SwapBufferObject("Ground", Ground);
-				RayTracer.SwapBufferObject("Metal", MetalSphere);
-				RayTracer.SwapBufferObject("Emission", EmissiveSphere);
-
 				RayTracer.Setting(RT_Setting::Sun_Radius, SunRadius / 200.0);
 				RayTracer.Setting(RT_Setting::Sun_Intensity, SunIntensity);
 				RayTracer.Setting(RT_Setting::Sun_Altitude, glm::radians(SunAltitude));
@@ -348,9 +310,9 @@ int main()
 		RayTracer.Accumulate();
 		RayTracer.Accumulate();
 		RayTracer.Accumulate();
-	
-		Display.SetUniform("gamma", gamma);
-		Display.SetUniform("exposure", exposure / 2.0);
+
+		RayTracer.PostProcess();
+
 		Display.Use();
 		RayTracer.Draw();
 

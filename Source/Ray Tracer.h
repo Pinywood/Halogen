@@ -13,12 +13,18 @@
 #include "Model.h"
 #include "Camera.h"
 #include "Framebuffer.h"
+#include "Scene.h"
 
 enum class RT_Setting
 {
 	Max_Bounces,
 	Sun_Radius, Sun_Intensity, Sun_Altitude, Sun_Azimuthal, Sky_Variation,
 	Sensor_Size, Focal_Length, Focus_Dist, F_Stop
+};
+
+enum class PostProcess_Setting
+{
+	Gamma, Exposure
 };
 
 template<>
@@ -61,6 +67,22 @@ struct std::formatter<RT_Setting> : std::formatter<std::string>
 	}
 };
 
+template<>
+struct std::formatter<PostProcess_Setting> : std::formatter<std::string>
+{
+	auto format(const PostProcess_Setting& Setting, format_context& ctx) const
+	{
+		if (Setting == PostProcess_Setting::Gamma)
+			return std::formatter<std::string>::format(std::format("{}", "Gamma"), ctx);
+
+		if (Setting == PostProcess_Setting::Exposure)
+			return std::formatter<std::string>::format(std::format("{}", "Exposure"), ctx);
+
+		else
+			return std::formatter<std::string>::format(std::format("{}", "<Invalid Setting>"), ctx);
+	}
+};
+
 static const std::unordered_map<RT_Setting, std::string> SettingUniformMap =
 {
 	std::pair(RT_Setting::Max_Bounces, "max_bounces"),
@@ -72,7 +94,13 @@ static const std::unordered_map<RT_Setting, std::string> SettingUniformMap =
 	std::pair(RT_Setting::Sensor_Size, "Sensor_Size"),
 	std::pair(RT_Setting::Focal_Length, "Focal_Length"),
 	std::pair(RT_Setting::Focus_Dist, "Focus_Dist"),
-	std::pair(RT_Setting::F_Stop, "F_Stop")
+	std::pair(RT_Setting::F_Stop, "F_Stop"),
+};
+
+static const std::unordered_map<PostProcess_Setting, std::string> PostSettingUniformMap =
+{
+	std::pair(PostProcess_Setting::Gamma, "gamma"),
+	std::pair(PostProcess_Setting::Exposure, "exposure")
 };
 
 class RayTracer
@@ -87,14 +115,19 @@ public:
 	void StartAccumulation(const unsigned int& RenderSlot = 1, const unsigned int& AccumulationSlot = 2);
 	void Accumulate();
 	void ResetAccumulation();
+	void PostProcess();
 	void Clear(const float& Red = 0.0f, const float& Green = 0.0f, const float& Blue = 0.0f) const;
 	void AddToBuffer(const std::string& name, const Sphere& Sphere);
 	void SwapBufferObject(const std::string& name, const Sphere& Sphere);
 	void ClearBuffer();
 	unsigned int RenderedSamples() const;
 
+	void SetCameraPosition(const glm::vec3& Position);
+	void SetCameraOrientation(const float& yaw, const float& pitch);
 	void MoveCamera(const float& deltaX, const float& deltaY, const float& deltaZ);
 	void TurnCamera(const float& xoffset, const float& yoffset);
+
+	void LoadScene(const Scene& scene);
 
 	template<typename T>
 	void Setting(const RT_Setting& setting, const T& value)
@@ -108,6 +141,13 @@ public:
 		ResetAccumulation();
 	}
 
+	template<typename T>
+	void Setting(const PostProcess_Setting& setting, const T& value)
+	{
+		const std::string name = PostSettingUniformMap.at(setting);
+		m_PostProcessShader.SetUniform(name, value);
+	}
+
 private:
 	void UploadSphere(const int& index) const;
 	void UploadSpheres() const;
@@ -115,6 +155,7 @@ private:
 private:
 	mutable Shader m_RTShader = Shader("res/Ray Trace.glsl");
 	mutable Shader m_AccumulationShader = Shader("res/Accumulator.glsl");
+	mutable Shader m_PostProcessShader = Shader("res/PostProcess.glsl");
 	VertexBuffer m_WindowVB;
 	IndexBuffer m_WindowIB;
 	VertexArray m_WindowVA;

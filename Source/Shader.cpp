@@ -1,7 +1,9 @@
 #include "Shader.h"
 
 Shader::Shader(const std::string& filepath)
+	:m_filepath(filepath)
 {
+	std::println("Compiling Shader: {}\n", m_filepath);
 	m_PreProcessedCode = PreProcess(filepath);
 	const auto& [VertexSource, FragmentSource] = ParseShader(m_PreProcessedCode);
 
@@ -37,7 +39,7 @@ Shader::Shader(const std::string& filepath)
 
 void Shader::ReCompile()
 {
-	const auto& [VertexSource, FragmentSource] = ParseShader(m_PreProcessedCode);
+	const auto& [VertexSource, FragmentSource] = ParseConstants(m_PreProcessedCode);
 	unsigned int VertexShaderID = CompileShader(GL_VERTEX_SHADER, VertexSource);
 	unsigned int FragmentShaderID = CompileShader(GL_FRAGMENT_SHADER, FragmentSource);
 
@@ -65,9 +67,12 @@ void Shader::ReCompile()
 	glValidateProgram(m_RendererID);
 
 	SetUniformLocations();
+	SetCachedUniforms();
 
 	glDeleteShader(VertexShaderID);
 	glDeleteShader(FragmentShaderID);
+
+	std::println("Recompiling Shader: {}\n", m_filepath);
 }
 
 Shader::~Shader()
@@ -134,63 +139,90 @@ void Shader::SetMat4(const std::string& name, const glm::mat4& matrix) const
 	glUniformMatrix4fv(glGetUniformLocation(m_RendererID, name.c_str()), 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
-template<typename... argTypes>
-int Shader::SetUniformTemplate(const std::string& name, const glslType& Type, std::function<void(int, argTypes...)> glFunc, argTypes... args)
+bool Shader::CheckUniformValidity(const std::string& name, const glslType& Type)
 {
 	const auto& found = m_UniformMap.find(name);
 
 	if (found == m_UniformMap.end())
 	{
-		std::println("Attempted to set uniform '{}', no such uniform exists", name);
-		return -1;
+		std::println("ERROR: At line {}, in {}:", __LINE__, __FILE__);
+		std::println("Attempted to set uniform '{}', no such uniform exists\n", name);
+		return false;
 	}
 
 	if (found->second.Type != Type)
 	{
-		std::println("Attempted to set uniform '{}' to type {} should be {}", name, Type, found->second.Type);
-		return -2;
+		std::println("ERROR: At line {}, in {}:", __LINE__, __FILE__);
+		std::println("Attempted to set uniform '{}' to type {} should be {}\n", name, Type, found->second.Type);
+		return false;
 	}
 
 	Use();
-	glFunc(found->second.Location, args...);
 	found->second.Set = true;
-	return 0;
+	return true;
 }
 
 void Shader::SetUniform(const std::string& name, const int& value)
 {
-	SetUniformTemplate(name, glslType::glslInt, std::function(glUniform1i), value);
+	if (!CheckUniformValidity(name, glslType::glslInt))
+		return;
+
+	const auto& found = m_UniformMap.find(name);
+	found->second.SetValue(value);
 }
 
 void Shader::SetUniform(const std::string& name, const float& value)
 {
-	SetUniformTemplate(name, glslType::glslFloat, std::function(glUniform1f), value);
+	if (!CheckUniformValidity(name, glslType::glslFloat))
+		return;
+
+	const auto& found = m_UniformMap.find(name);
+	found->second.SetValue(value);
 }
 
 void Shader::SetUniform(const std::string& name, const double& value)
 {
-	SetUniformTemplate(name, glslType::glslFloat, std::function(glUniform1f), (float)value);
+	if (!CheckUniformValidity(name, glslType::glslFloat))
+		return;
+
+	const auto& found = m_UniformMap.find(name);
+	found->second.SetValue(value);
 }
 
 void Shader::SetUniform(const std::string& name, const Vec2& value)
 {
-	SetUniformTemplate(name, glslType::glslVec2, std::function(glUniform2f), value.x, value.y);
+	if (!CheckUniformValidity(name, glslType::glslVec2))
+		return;
+
+	const auto& found = m_UniformMap.find(name);
+	found->second.SetValue(value);
 }
 
 void Shader::SetUniform(const std::string& name, const Vec3& value)
 {
-	SetUniformTemplate(name, glslType::glslVec3, std::function(glUniform3f), value.x, value.y, value.z);
+	if (!CheckUniformValidity(name, glslType::glslVec3))
+		return;
+
+	const auto& found = m_UniformMap.find(name);
+	found->second.SetValue(value);
 }
 
 void Shader::SetUniform(const std::string& name, const glm::mat3& value)
 {
-	SetUniformTemplate(name, glslType::glslMat3, std::function(glUniformMatrix3fv), 1, (GLboolean)GL_FALSE, glm::value_ptr(value));
-}
+	if (!CheckUniformValidity(name, glslType::glslMat3))
+		return;
 
+	const auto& found = m_UniformMap.find(name);
+	found->second.SetValue(value);
+}
 
 void Shader::SetUniform(const std::string& name, const glm::mat4& value)
 {
-	SetUniformTemplate(name, glslType::glslMat4, std::function(glUniformMatrix4fv), 1, (GLboolean)GL_FALSE, glm::value_ptr(value));
+	if (!CheckUniformValidity(name, glslType::glslMat4))
+		return;
+
+	const auto& found = m_UniformMap.find(name);
+	found->second.SetValue(value);
 }
 
 std::unordered_map<std::string, Uniform> Shader::GetUniformMap() const
@@ -209,6 +241,11 @@ bool Shader::CheckUniformStatus(const std::string& name) const
 }
 
 void Shader::AddToLookUp(const std::string name, const int& value)
+{
+	m_ConstantLookUpMap[name] = std::to_string(value);
+}
+
+void Shader::AddToLookUp(const std::string name, const size_t& value)
 {
 	m_ConstantLookUpMap[name] = std::to_string(value);
 }
@@ -336,6 +373,92 @@ std::tuple<std::string, std::string> Shader::ParseShader(const std::string& Shad
 	return { ss[0].str(), ss[1].str() };
 }
 
+std::tuple<std::string, std::string> Shader::ParseConstants(const std::string& ShaderCode)
+{
+	enum class ShaderType
+	{
+		NONE = -1, VERTEX = 0, FRAGMENT = 1
+	};
+
+	std::string line;
+	std::stringstream stream;
+	stream << ShaderCode;
+	std::stringstream ss[2];
+	ShaderType type = ShaderType::NONE;
+
+	while (getline(stream, line))
+	{
+		if (line.find("#shader") != std::string::npos)
+		{
+			if (line.find("vertex") != std::string::npos)
+			{
+				type = ShaderType::VERTEX;
+			}
+
+			else if (line.find("fragment") != std::string::npos)
+			{
+				type = ShaderType::FRAGMENT;
+			}
+		}
+
+		else if (TokenPresent(line, "const") && TokenPresent(line, "="))
+		{
+			for (auto& [name, value] : m_ConstantLookUpMap)
+			{
+				if (TokenPresent(line, name))
+				{
+					int pos = line.find("=") + 1;
+					int end = line.find(";");
+					line.replace(pos, end - pos, value);
+				}
+			}
+
+			ss[(int)type] << line << '\n';
+		}
+
+		else
+			ss[(int)type] << line << '\n';
+	}
+
+	return { ss[0].str(), ss[1].str() };
+}
+
+void Shader::SetCachedUniforms()
+{
+	for (auto& [name, uniform] : m_UniformMap)
+	{
+		if (!uniform.Set)
+			continue;
+
+		switch (uniform.Type)
+		{
+		case glslType::glslInt:
+			SetUniform(name, uniform.IntValue);
+			break;
+
+		case glslType::glslFloat:
+			SetUniform(name, uniform.FloatValue);
+			break;
+
+		case glslType::glslVec2:
+			SetUniform(name, uniform.Vec2Value);
+			break;
+
+		case glslType::glslVec3:
+			SetUniform(name, uniform.Vec3Value);
+			break;
+
+		case glslType::glslMat3:
+			SetUniform(name, uniform.Mat3Value);
+			break;
+
+		case glslType::glslMat4:
+			SetUniform(name, uniform.Mat4Value);
+			break;
+		}
+	}
+}
+
 std::string Shader::GetFileDirectory(const std::string& filepath) const
 {
 	std::string directory = filepath;
@@ -427,4 +550,46 @@ void Shader::SetUniformLocations()
 	{
 		uniform.Location = glGetUniformLocation(m_RendererID, name.c_str());
 	}
+}
+
+void Uniform::SetValue(const int& value)
+{
+	glUniform1i(Location, value);
+	IntValue = value;
+}
+
+void Uniform::SetValue(const float& value)
+{
+	glUniform1f(Location, value);
+	FloatValue = value;
+}
+
+void Uniform::SetValue(const double& value)
+{
+	glUniform1f(Location, value);
+	FloatValue = value;
+}
+
+void Uniform::SetValue(const Vec2& value)
+{
+	glUniform2f(Location, value.x, value.y);
+	Vec2Value = value;
+}
+
+void Uniform::SetValue(const Vec3& value)
+{
+	glUniform3f(Location, value.x, value.y, value.z);
+	Vec3Value = value;
+}
+
+void Uniform::SetValue(const glm::mat3& value)
+{
+	glUniformMatrix3fv(Location, 1, GL_FALSE, glm::value_ptr(value));
+	Mat3Value = value;
+}
+
+void Uniform::SetValue(const glm::mat4& value)
+{
+	glUniformMatrix4fv(Location, 1, GL_FALSE, glm::value_ptr(value));
+	Mat4Value = value;
 }

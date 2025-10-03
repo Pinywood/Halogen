@@ -5,6 +5,8 @@
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 
+#include "VectorMath.h"
+
 const float YAW = -90.0f;
 const float PITCH = 0.0f;
 const float SPEED = 2.5f;
@@ -39,6 +41,9 @@ public:
     glm::mat3 GetViewMatrix() const;
     void Move(const float& deltaX, const float& deltaY, const float& deltaZ);
     void Turn(float xoffset, float yoffset, GLboolean constrainPitch = true);
+    void SetOrientation(const float& yaw, const float& pitch);
+    void SetYaw(const float& yaw);
+    void SetPitch(const float& pitch);
 
 private:
     void updateCameraVectors();

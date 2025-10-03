@@ -77,12 +77,12 @@
       <PreprocessorDefinitions>GLEW_STATIC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\Dependencies\GLEW_x86\include;$(ProjectDir)..\Dependencies\GLFW_x86\include;$(ProjectDir)..\Dependencies\glm;$(ProjectDir)Source\Vendor</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\Dependencies\GLEW\include;$(ProjectDir)..\Dependencies\GLFW\include;$(ProjectDir)..\Dependencies\glm;$(ProjectDir)Source\Vendor</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\Dependencies\GLFW_x86\lib;$(SolutionDir)..\Dependencies\GLEW_x86\lib\Release\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\Dependencies\GLFW\lib\x86;$(SolutionDir)..\Dependencies\GLEW\lib\Release\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;opengl32.lib;glew32s.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -95,12 +95,12 @@
       <PreprocessorDefinitions>GLEW_STATIC;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\Dependencies\GLEW_x86\include;$(ProjectDir)..\Dependencies\GLFW_x86\include;$(ProjectDir)..\Dependencies\glm;$(ProjectDir)Source\Vendor</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\Dependencies\GLEW\include;$(ProjectDir)..\Dependencies\GLFW\include;$(ProjectDir)..\Dependencies\glm;$(ProjectDir)Source\Vendor</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)..\Dependencies\GLFW_x86\lib;$(SolutionDir)..\Dependencies\GLEW_x86\lib\Release\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\Dependencies\GLFW\lib\x86;$(SolutionDir)..\Dependencies\GLEW\lib\Release\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>glfw3.lib;opengl32.lib;glew32s.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -136,7 +136,9 @@
     <ClCompile Include="Source\Framebuffer.cpp" />
     <ClCompile Include="Source\IndexBuffer.cpp" />
     <ClCompile Include="Source\Ray Tracer.cpp" />
+    <ClCompile Include="Source\Scene.cpp" />
     <ClCompile Include="Source\Shader.cpp" />
+    <ClCompile Include="Source\Tokenization.cpp" />
     <ClCompile Include="Source\VectorMath.cpp" />
     <ClCompile Include="Source\Vendor\ImGui\imgui.cpp" />
     <ClCompile Include="Source\Vendor\ImGui\imgui_demo.cpp" />
@@ -157,6 +159,7 @@
     <ClInclude Include="Source\OpenGLError.h" />
     <ClInclude Include="Source\Ray Tracer.h" />
     <ClInclude Include="Source\Shader.h" />
+    <ClInclude Include="Source\Tokenization.h" />
     <ClInclude Include="Source\VectorMath.h" />
     <ClInclude Include="Source\Vendor\ImGui\imconfig.h" />
     <ClInclude Include="Source\Vendor\ImGui\imgui.h" />
@@ -167,6 +170,7 @@
     <ClInclude Include="Source\Vendor\ImGui\imstb_rectpack.h" />
     <ClInclude Include="Source\Vendor\ImGui\imstb_textedit.h" />
     <ClInclude Include="Source\Vendor\ImGui\imstb_truetype.h" />
+    <ClInclude Include="Source\Scene.h" />
     <ClInclude Include="Source\VertexArray.h" />
     <ClInclude Include="Source\VertexBuffer.h" />
     <ClInclude Include="Source\VertexBufferLayout.h" />
@@ -175,12 +179,14 @@
     <None Include="res\Accumulator.glsl" />
     <None Include="res\Display.glsl" />
     <None Include="res\Model.glsl" />
+    <None Include="res\PostProcess.glsl" />
     <None Include="res\PRNG.glsl" />
     <None Include="res\Ray Trace.frag" />
     <None Include="res\Ray Trace.glsl" />
     <None Include="res\Ray Trace.vert" />
     <None Include="res\Ray.glsl" />
     <None Include="res\Uniforms.glsl" />
+    <None Include="res\Scene.hgns" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

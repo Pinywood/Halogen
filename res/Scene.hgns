@@ -1,0 +1,48 @@
+Camera:
+	Position = (5.0, 2.0, 2.0)
+	Yaw = -120.0
+	Pitch = -23.0
+
+Spheres:
+	Ground:		 Type = DiffuseType
+				 Albedo = (0.6, 0.6, 0.6)
+				 Roughness = 0.9
+				 Position = (0.0, -1001.0, 0.0)
+				 Radius = 1000.0
+			
+	GlassSphere: Type = GlassType
+				 Albedo = (1.0, 1.0, 1.0)
+				 IOR = 1.5
+				 Position = (0.0, 0.01, 0.0)
+				 Radius = 1.0
+
+	Glass2:		 Type = GlassType
+				 Albedo = (1.0, 1.0, 1.0)
+				 IOR = 0.67
+				 Position = (0.0, 0.01, 0.0)
+				 Radius = 0.95
+
+	Diffuse:	 Type = DiffuseType
+				 Albedo = (1.0, 1.0, 1.0)
+				 Roughness = 1.0
+				 Position = (3.0, 0.0, 0.0)
+				 Radius = 1.0
+
+	Metal:		 Type = DiffuseType
+				 Albedo = (1.0, 1.0, 1.0)
+				 Roughness = 0.0
+				 Position = (2.0, 0.0, -3.0)
+				 Radius = 1.0
+
+	Emission:	 Type = DiffuseType
+				 Albedo = (1.0, 1.0, 1.0)
+				 Roughness = 0.0
+				 Emission = 30.0
+				 Position = (-1.0, 0.0, -3.0)
+				 Radius = 1.0
+				 
+Settings:
+	Sun_Radius = 0.5
+	Sun_Intensity = 800
+	F_Stop = 1.4
+	Focus_Dist = 3.3
