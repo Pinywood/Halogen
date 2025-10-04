@@ -4,6 +4,7 @@
 #include <gtc/matrix_transform.hpp>
 
 #include <unordered_map>
+#include <map>
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -41,8 +42,11 @@ const std::unordered_map<std::string, Scene_Setting> SettingMap =
 static bool EqualPresent(const std::string& string, const int& Line, const std::string& filepath)
 {
 	bool found = TokenPresent(string, "=");
-	if(!found)
+	if (!found)
+	{
+		std::println("{}", string);
 		std::println("SCENE FILE PARSE FAILED: SYNTAX ERROR: missing '=' at line {} in {}", Line, filepath);
+	}
 
 	return found;
 }
@@ -75,13 +79,18 @@ public:
 	float m_Gamma = 2.2;
 	float m_Exposure = 1.5;
 
-	std::unordered_map<std::string, Sphere> m_SphereMap;
+	std::map<std::string, Sphere> m_SphereMap;
 	Camera m_Camera;
 
 public:
 	Scene() = default;
 	Scene(const std::string& filepath);
+	void Save();
+	void Save(const std::string& filepath);
 	void Load(const std::string& filepath);
+
+private:
+	std::string m_Filepath;
 
 private:
 	std::string GetSphereName(const std::string& line, const int& LineNumber, const std::string& filepath);
@@ -90,57 +99,60 @@ private:
 	void ParseTargetCamera(const std::string& line, const int& LineNumber, const std::string& filepath);
 
 	template<typename T>
-	void Setting(const Scene_Setting& Setting, const T& value)
-	{
-		switch (Setting)
-		{
-			case Scene_Setting::Max_Bounces:
-				m_MaxBounces = value;
-				break;
-
-			case Scene_Setting::Sun_Radius:
-				m_SunRadius = value;
-				break;
-
-			case Scene_Setting::Sun_Intensity:
-				m_SunIntensity = value;
-				break;
-
-			case Scene_Setting::Sun_Altitude:
-				m_SunAltitude = value;
-				break;
-
-			case Scene_Setting::Sun_Azimuthal:
-				m_SunAzimuthal = value;
-				break;
-
-			case Scene_Setting::Sky_Variation:
-				m_SkyVariation = value;
-				break;
-
-			case Scene_Setting::Sensor_Size:
-				m_SensorSize = value;
-				break;
-
-			case Scene_Setting::Focal_Length:
-				m_FocalLength = value;
-				break;
-
-			case Scene_Setting::Focus_Dist:
-				m_FocusDist = value;
-				break;
-
-			case Scene_Setting::F_Stop:
-				m_FStop = value;
-				break;
-
-			case Scene_Setting::Gamma:
-				m_Gamma = value;
-				break;
-
-			case Scene_Setting::Exposure:
-				m_Exposure = value;
-				break;
-		}
-	}
+	void Setting(const Scene_Setting& Setting, const T& value);
 };
+
+template<typename T>
+void Scene::Setting(const Scene_Setting& Setting, const T& value)
+{
+	switch (Setting)
+	{
+		case Scene_Setting::Max_Bounces:
+			m_MaxBounces = value;
+			break;
+
+		case Scene_Setting::Sun_Radius:
+			m_SunRadius = value;
+			break;
+
+		case Scene_Setting::Sun_Intensity:
+			m_SunIntensity = value;
+			break;
+
+		case Scene_Setting::Sun_Altitude:
+			m_SunAltitude = value;
+			break;
+
+		case Scene_Setting::Sun_Azimuthal:
+			m_SunAzimuthal = value;
+			break;
+
+		case Scene_Setting::Sky_Variation:
+			m_SkyVariation = value;
+			break;
+
+		case Scene_Setting::Sensor_Size:
+			m_SensorSize = value;
+			break;
+
+		case Scene_Setting::Focal_Length:
+			m_FocalLength = value;
+			break;
+
+		case Scene_Setting::Focus_Dist:
+			m_FocusDist = value;
+			break;
+
+		case Scene_Setting::F_Stop:
+			m_FStop = value;
+			break;
+
+		case Scene_Setting::Gamma:
+			m_Gamma = value;
+			break;
+
+		case Scene_Setting::Exposure:
+			m_Exposure = value;
+			break;
+	}
+}

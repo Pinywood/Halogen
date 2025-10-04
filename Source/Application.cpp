@@ -42,10 +42,12 @@ float deltaY = 0.0;
 float deltaZ = 0.0;
 
 bool FirstMouse = true;
-bool TurnEnable = false;
+bool MoveEnable = false;
 bool Resized = false;
 bool Turn = false;
 bool Move = false;
+bool CtrlHeld = false;
+bool Save = false;
 
 const float Pi = 3.141592653589;
 
@@ -116,11 +118,21 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 {
 	if (key == GLFW_KEY_E && action == GLFW_PRESS)
 	{
-		TurnEnable = !TurnEnable;
+		MoveEnable = !MoveEnable;
 
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-		if(TurnEnable)
+		if(MoveEnable)
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	}
+
+	if (key == GLFW_KEY_S && CtrlHeld && action == GLFW_PRESS)
+		Save = true;
+
+	if (key == GLFW_KEY_LEFT_CONTROL)
+	{
+		CtrlHeld = false;
+		if(action != GLFW_RELEASE)
+			CtrlHeld = true;
 	}
 }
 
@@ -138,10 +150,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	LastX = xpos;
 	LastY = ypos;
 
-	if (TurnEnable)
-	{
-		Turn = true;
-	}
+	Turn = true;
 }
 
 ImGuiIO& SetupImGui(GLFWwindow* window)
@@ -172,14 +181,12 @@ int main()
 
 	GLFWwindow* window = glfwCreateWindow(WindowWidth, WindowHeight, "Bombombini Windolini", NULL, NULL);
 	if (window == nullptr)
-	{
-		std::cout << "Could not initialize the window" << std::endl;
-	}
+		std::println("Could not initialize the window");
 
 	glfwMakeContextCurrent(window);
 
 	if (glewInit() != GLEW_OK)
-		std::cout << "GLEW ERROR" << std::endl;
+		std::println("GLEW ERROR");
 
 	glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback(GLMessageCallback, 0);
@@ -201,25 +208,11 @@ int main()
 	glfwSwapInterval(1);
 
 	RayTracer RayTracer(WindowWidth, WindowHeight);
+	
 	Scene scene("res/Scene.hgns");
 	RayTracer.LoadScene(scene);
 
 	ImGuiIO& io = SetupImGui(window);
-
-	int max_bounces = scene.m_MaxBounces;
-	float Sensor_Size = scene.m_SensorSize;
-	float Focal_Length = scene.m_FocalLength;
-	float Focus_Dist = scene.m_FocusDist;
-	float F_Stop = scene.m_FStop;
-
-	float SunIntensity = scene.m_SunIntensity;
-	float SunRadius = scene.m_SunRadius;
-	float SunAltitude = scene.m_SunAltitude;
-	float SunAzimuthal = scene.m_SunAzimuthal;
-	float SkyVariation = scene.m_SkyVariation;
-
-	float gamma = scene.m_Gamma;
-	float exposure = scene.m_Exposure;
 
 	const int RenderedImage = 1;						//TexSlot 0 is used for binding through indirect calls (like resize)
 	const int AccumulatedImage = 2;
@@ -229,6 +222,7 @@ int main()
 
 	RayTracer.StartAccumulation(RenderedImage, AccumulatedImage);
 
+	float LastSave = 0.0;
 	while (!glfwWindowShouldClose(window))
 	{
 		ProcessInput(window);
@@ -237,18 +231,29 @@ int main()
 		if (Resized)
 			RayTracer.FramebufferReSize(WindowWidth, WindowHeight);
 
-		if (Turn)
+		if (MoveEnable)
 		{
-			RayTracer.TurnCamera(xoffset, yoffset);
-			RayTracer.ResetAccumulation();
+			if (Turn)
+			{
+				RayTracer.TurnCamera(xoffset, yoffset);
+				RayTracer.ResetAccumulation();
+			}
+
+			if (Move)
+			{
+				RayTracer.MoveCamera(deltaX, deltaY, deltaZ);
+				RayTracer.ResetAccumulation();
+			}
+		}
+		
+		else if (Save)
+		{
+			LastSave = currentTime;
+			scene.m_Camera = RayTracer.GetCamera();
+			scene.Save();
 		}
 
-		if (Move)
-		{
-			RayTracer.MoveCamera(deltaX, deltaY, deltaZ);
-			RayTracer.ResetAccumulation();
-		}
-
+		Save = false;
 		Resized = false;
 		Turn = false;
 		Move = false;
@@ -260,41 +265,41 @@ int main()
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+		ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 
 		{
-			ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
-			ImGui::Begin("Settings");
+			ImGui::Begin("Renderer Settings");
 
 			bool modified = false;
 
-			modified |= ImGui::SliderFloat("Sun Radius", &SunRadius, 0.0f, 15.0f);
-			modified |= ImGui::SliderFloat("Sun Intensity", &SunIntensity, 0.0f, 1000.0f);
-			modified |= ImGui::SliderFloat("Sun Altitude", &SunAltitude, -90.0, 90.0);
-			modified |= ImGui::SliderFloat("Sun Azimuthal", &SunAzimuthal, 0.0, 360.0);
-			modified |= ImGui::SliderFloat("Sky Variation", &SkyVariation, 0.0f, 1.0f);
-			modified |= ImGui::SliderInt("Max Bounces", &max_bounces, 0, 60);
-			modified |= ImGui::SliderFloat("Sensor Size", &Sensor_Size, 35.0f, 150.0f);
-			modified |= ImGui::SliderFloat("Focal Length", &Focal_Length, 35.0f, 200.0f);
-			modified |= ImGui::SliderFloat("Focus Distance", &Focus_Dist, 0.0f, 5.0f);
-			modified |= ImGui::SliderFloat("F-Stop", &F_Stop, 0.0f, 2.0f);
+			modified |= ImGui::SliderFloat("Sun Radius", &scene.m_SunRadius, 0.0f, 15.0f);
+			modified |= ImGui::SliderFloat("Sun Intensity", &scene.m_SunIntensity, 0.0f, 1000.0f);
+			modified |= ImGui::SliderFloat("Sun Altitude", &scene.m_SunAltitude, -90.0, 90.0);
+			modified |= ImGui::SliderFloat("Sun Azimuthal", &scene.m_SunAzimuthal, 0.0, 360.0);
+			modified |= ImGui::SliderFloat("Sky Variation", &scene.m_SkyVariation, 0.0f, 1.0f);
+			modified |= ImGui::SliderInt("Max Bounces", &scene.m_MaxBounces, 0, 60);
+			modified |= ImGui::SliderFloat("Sensor Size", &scene.m_SensorSize, 35.0f, 150.0f);
+			modified |= ImGui::SliderFloat("Focal Length", &scene.m_FocalLength, 35.0f, 200.0f);
+			modified |= ImGui::SliderFloat("Focus Distance", &scene.m_FocusDist, 0.0f, 5.0f);
+			modified |= ImGui::SliderFloat("F-Stop", &scene.m_FStop, 0.0f, 2.0f);
 
-			ImGui::SliderFloat("Exposure", &exposure, 0.0, 3.0);
-			ImGui::SliderFloat("Gamma", &gamma, 0.0, 3.0);
-			RayTracer.Setting(PostProcess_Setting::Gamma, gamma);
-			RayTracer.Setting(PostProcess_Setting::Exposure, exposure);
+			ImGui::SliderFloat("Exposure", &scene.m_Exposure, 0.0, 3.0);
+			ImGui::SliderFloat("Gamma", &scene.m_Gamma, 0.0, 3.0);
+			RayTracer.Setting(PostProcess_Setting::Gamma, scene.m_Gamma);
+			RayTracer.Setting(PostProcess_Setting::Exposure, scene.m_Exposure);
 
 			if (modified)
 			{
-				RayTracer.Setting(RT_Setting::Sun_Radius, SunRadius / 200.0);
-				RayTracer.Setting(RT_Setting::Sun_Intensity, SunIntensity);
-				RayTracer.Setting(RT_Setting::Sun_Altitude, glm::radians(SunAltitude));
-				RayTracer.Setting(RT_Setting::Sun_Azimuthal, glm::radians(SunAzimuthal));
-				RayTracer.Setting(RT_Setting::Sky_Variation, SkyVariation);
-				RayTracer.Setting(RT_Setting::Max_Bounces, max_bounces);
-				RayTracer.Setting(RT_Setting::Sensor_Size, Sensor_Size / 1000.0);
-				RayTracer.Setting(RT_Setting::Focal_Length, Focal_Length / 1000.0);
-				RayTracer.Setting(RT_Setting::Focus_Dist, Focus_Dist);
-				RayTracer.Setting(RT_Setting::F_Stop, F_Stop);
+				RayTracer.Setting(RT_Setting::Sun_Radius, scene.m_SunRadius / 200.0);
+				RayTracer.Setting(RT_Setting::Sun_Intensity, scene.m_SunIntensity);
+				RayTracer.Setting(RT_Setting::Sun_Altitude, glm::radians(scene.m_SunAltitude));
+				RayTracer.Setting(RT_Setting::Sun_Azimuthal, glm::radians(scene.m_SunAzimuthal));
+				RayTracer.Setting(RT_Setting::Sky_Variation, scene.m_SkyVariation);
+				RayTracer.Setting(RT_Setting::Max_Bounces, scene.m_MaxBounces);
+				RayTracer.Setting(RT_Setting::Sensor_Size, scene.m_SensorSize / 1000.0);
+				RayTracer.Setting(RT_Setting::Focal_Length, scene.m_FocalLength / 1000.0);
+				RayTracer.Setting(RT_Setting::Focus_Dist, scene.m_FocusDist);
+				RayTracer.Setting(RT_Setting::F_Stop, scene.m_FStop);
 			}
 
 			std::stringstream ss;
@@ -302,6 +307,38 @@ int main()
 			ImGui::Text(ss.str().c_str());
 
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+
+			if (currentTime - LastSave < 0.5)
+				ImGui::Text("Saved");
+
+			ImGui::End();
+		}
+
+		{
+			ImGui::Begin("Scene");
+
+			for (auto& [name, sphere] : scene.m_SphereMap)
+			{
+				ImGui::PushID(name.c_str());
+				bool modified = false;
+
+				ImGui::Text(name.c_str());
+
+				if (name != "Ground")
+					modified |= ImGui::SliderFloat("Radius", &sphere.Radius, 0.0f, 1.0f);
+
+				modified |= ImGui::SliderFloat("Roughness", &sphere.material.Roughness, 0.0f, 1.0f);
+				modified |= ImGui::ColorEdit3("Color", &sphere.material.Albedo.x);
+				if(sphere.material.Emission != 0.0)
+					modified |= ImGui::SliderFloat("Emission", &sphere.material.Emission, 0.01f, 50.0f);
+
+				if (modified)
+					RayTracer.SwapBufferObject(name, sphere);
+
+				ImGui::Separator();
+				ImGui::PopID();
+			}
+
 			ImGui::End();
 		}
 

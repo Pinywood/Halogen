@@ -126,6 +126,7 @@ public:
 	void SetCameraOrientation(const float& yaw, const float& pitch);
 	void MoveCamera(const float& deltaX, const float& deltaY, const float& deltaZ);
 	void TurnCamera(const float& xoffset, const float& yoffset);
+	Camera GetCamera() const;
 
 	void LoadScene(const Scene& scene);
 

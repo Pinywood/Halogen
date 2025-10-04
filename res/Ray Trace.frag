@@ -2,13 +2,13 @@
 
 #include "Ray.glsl"
 
-in vec2 positions;
+in vec3 positions;
 
 out vec4 FragmentColor;
 
 void main()
 {
-	vec3 pixel_Position = vec3(positions.x * Sensor_Size / 2.0, positions.y * Sensor_Size / (2.0 * AspectRatio), 0.0);
+	vec3 pixel_Position = positions;
 
 	Sphere Spheres[ModelCount];
 	for(int i = 0; i < ModelCount; i++)

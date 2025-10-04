@@ -1,48 +1,63 @@
 Camera:
-	Position = (5.0, 2.0, 2.0)
-	Yaw = -120.0
-	Pitch = -23.0
+	Position = (0.7859796, -0.6991107, 1.6748146)
+	Yaw = 288.1995
+	Pitch = 8.700039
 
 Spheres:
-	Ground:		 Type = DiffuseType
-				 Albedo = (0.6, 0.6, 0.6)
-				 Roughness = 0.9
-				 Position = (0.0, -1001.0, 0.0)
-				 Radius = 1000.0
-			
-	GlassSphere: Type = GlassType
-				 Albedo = (1.0, 1.0, 1.0)
-				 IOR = 1.5
-				 Position = (0.0, 0.01, 0.0)
-				 Radius = 1.0
+	Diffuse:
+					Position = (3, 0, 0)
+					Radius = 1
+					Type = DiffuseType
+					Albedo = (1, 1, 1)
+					Roughness = 1
 
-	Glass2:		 Type = GlassType
-				 Albedo = (1.0, 1.0, 1.0)
-				 IOR = 0.67
-				 Position = (0.0, 0.01, 0.0)
-				 Radius = 0.95
+	Emission:
+					Position = (-1, 0, -3)
+					Radius = 1
+					Type = DiffuseType
+					Albedo = (1, 0.30882353, 0.30882353)
+					Roughness = 0
+					Emission = 30
 
-	Diffuse:	 Type = DiffuseType
-				 Albedo = (1.0, 1.0, 1.0)
-				 Roughness = 1.0
-				 Position = (3.0, 0.0, 0.0)
-				 Radius = 1.0
+	Glass2:
+					Position = (0, 0.01, 0)
+					Radius = 0.927
+					Type = GlassType
+					Albedo = (1, 1, 1)
+					Roughness = 0
+					IOR = 0.67
 
-	Metal:		 Type = DiffuseType
-				 Albedo = (1.0, 1.0, 1.0)
-				 Roughness = 0.0
-				 Position = (2.0, 0.0, -3.0)
-				 Radius = 1.0
+	GlassSphere:
+					Position = (0, 0.01, 0)
+					Radius = 1
+					Type = GlassType
+					Albedo = (1, 1, 1)
+					Roughness = 0
+					IOR = 1.5
 
-	Emission:	 Type = DiffuseType
-				 Albedo = (1.0, 1.0, 1.0)
-				 Roughness = 0.0
-				 Emission = 30.0
-				 Position = (-1.0, 0.0, -3.0)
-				 Radius = 1.0
-				 
+	Ground:
+					Position = (0, -1001, 0)
+					Radius = 1000
+					Type = DiffuseType
+					Albedo = (0.61764705, 0.61764705, 0.61764705)
+					Roughness = 1
+
+	Metal:
+					Position = (2, 0, -3)
+					Radius = 1
+					Type = DiffuseType
+					Albedo = (1, 1, 1)
+					Roughness = 0
+
 Settings:
-	Sun_Radius = 0.5
-	Sun_Intensity = 800
-	F_Stop = 1.4
-	Focus_Dist = 3.3
+	Max_Bounces = 60
+	Sun_Radius = 0.432
+	Sun_Intensity = 1000
+	Sun_Altitude = 16.154
+	Sun_Azimuthal = 229.683
+	Sky_Variation = 0.2
+	Sensor_Size = 100
+	Focal_Length = 68.597
+	Focus_Dist = 4.366
+	F_Stop = 0.196
+	Exposure = 1.351

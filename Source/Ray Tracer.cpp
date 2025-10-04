@@ -265,35 +265,25 @@ void RayTracer::TurnCamera(const float& xoffset, const float& yoffset)
 	m_RTShader.SetUniform("View", m_Camera.GetViewMatrix());
 }
 
+Camera RayTracer::GetCamera() const
+{
+	return m_Camera;
+}
+
 void RayTracer::LoadScene(const Scene& scene)
 {
-	int max_bounces = scene.m_MaxBounces;
-	float Sensor_Size = scene.m_SensorSize;
-	float Focal_Length = scene.m_FocalLength;
-	float Focus_Dist = scene.m_FocusDist;
-	float F_Stop = scene.m_FStop;
-
-	float SunIntensity = scene.m_SunIntensity;
-	float SunRadius = scene.m_SunRadius;
-	float SunAltitude = scene.m_SunAltitude;
-	float SunAzimuthal = scene.m_SunAzimuthal;
-	float SkyVariation = scene.m_SkyVariation;
-
-	float gamma = scene.m_Gamma;
-	float exposure = scene.m_Exposure;
-
-	Setting(RT_Setting::Sun_Radius, SunRadius / 200.0);
-	Setting(RT_Setting::Sun_Intensity, SunIntensity);
-	Setting(RT_Setting::Sun_Altitude, glm::radians(SunAltitude));
-	Setting(RT_Setting::Sun_Azimuthal, glm::radians(SunAzimuthal));
-	Setting(RT_Setting::Sky_Variation, SkyVariation);
-	Setting(RT_Setting::Max_Bounces, max_bounces);
-	Setting(RT_Setting::Sensor_Size, Sensor_Size / 1000.0);
-	Setting(RT_Setting::Focal_Length, Focal_Length / 1000.0);
-	Setting(RT_Setting::Focus_Dist, Focus_Dist);
-	Setting(RT_Setting::F_Stop, F_Stop);
-	Setting(PostProcess_Setting::Gamma, gamma);
-	Setting(PostProcess_Setting::Exposure, exposure);
+	Setting(RT_Setting::Sun_Radius, scene.m_SunRadius / 200.0);
+	Setting(RT_Setting::Sun_Intensity, scene.m_SunIntensity);
+	Setting(RT_Setting::Sun_Altitude, glm::radians(scene.m_SunAltitude));
+	Setting(RT_Setting::Sun_Azimuthal, glm::radians(scene.m_SunAzimuthal));
+	Setting(RT_Setting::Sky_Variation, scene.m_SkyVariation);
+	Setting(RT_Setting::Max_Bounces, scene.m_MaxBounces);
+	Setting(RT_Setting::Sensor_Size, scene.m_SensorSize / 1000.0);
+	Setting(RT_Setting::Focal_Length, scene.m_FocalLength / 1000.0);
+	Setting(RT_Setting::Focus_Dist, scene.m_FocusDist);
+	Setting(RT_Setting::F_Stop, scene.m_FStop);
+	Setting(PostProcess_Setting::Gamma, scene.m_Gamma);
+	Setting(PostProcess_Setting::Exposure, scene.m_Exposure);
 
 	ClearBuffer();
 

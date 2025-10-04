@@ -6,6 +6,22 @@ enum class BSDFType
 	Diffuse, Glass
 };
 
+template<>
+struct std::formatter<BSDFType> : std::formatter<std::string>
+{
+	auto format(const BSDFType& type, format_context& ctx) const
+	{
+		if (type == BSDFType::Diffuse)
+			return std::formatter<std::string>::format(std::format("{}", "DiffuseType"), ctx);
+
+		if (type == BSDFType::Glass)
+			return std::formatter<std::string>::format(std::format("{}", "GlassType"), ctx);
+
+		else
+			return std::formatter<std::string>::format(std::format("{}", "<NO_TYPE>"), ctx);
+	}
+};
+
 struct Material
 {
 	BSDFType Type = BSDFType::Diffuse;
