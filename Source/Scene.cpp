@@ -13,7 +13,7 @@ void Scene::Load(const std::string& filepath)
 
 	enum class Target
 	{
-		None, Spheres, Settings, Camera
+		None, Spheres, Settings, Camera, Materials
 	};
 
 	if (!stream.is_open())
@@ -25,7 +25,8 @@ void Scene::Load(const std::string& filepath)
 	m_Filepath = filepath;
 
 	Target target = Target::None;
-	std::string TargetName;
+	std::string SphereTargetName;
+	std::string MaterialTargetName;
 	size_t LineNumber = 0;
 
 	while (getline(stream, line))
@@ -53,13 +54,21 @@ void Scene::Load(const std::string& filepath)
 			getline(stream, line);
 		}
 
-		if (target == Target::Spheres)
-			ParseTargetSpheres(TargetName, line, LineNumber, filepath);
+		else if (line.find("Materials:") != std::string::npos)
+		{
+			target = Target::Materials;
+			LineNumber++;
+			getline(stream, line);
+		}
 
+		if (target == Target::Spheres)
+			ParseTargetSpheres(SphereTargetName, line, LineNumber, filepath);
+
+		else if (target == Target::Materials)
+			ParseTargetMaterials(MaterialTargetName, line, LineNumber, filepath);
 
 		else if (target == Target::Settings)
 			ParseTargetSettings(line, LineNumber, filepath);
-
 
 		else if (target == Target::Camera)
 			ParseTargetCamera(line, LineNumber, filepath);
@@ -81,22 +90,30 @@ void Scene::Save(const std::string& filepath)
 	std::println(stream, "\tPitch = {}", m_Camera.m_Pitch);
 	std::print(stream, "\n");
 
+	std::println(stream, "Materials:");
+	for (auto& [name, material] : m_MaterialMap)
+	{
+		std::println(stream, "\t{}:", name);
+		std::println(stream, "\t\t\t\t\tType = {}", material.Type);
+		std::println(stream, "\t\t\t\t\tAlbedo = ({}, {}, {})", material.Albedo.x, material.Albedo.y, material.Albedo.z);
+		std::println(stream, "\t\t\t\t\tRoughness = {}", material.Roughness);
+
+		if (material.Emission != 0.0)
+			std::println(stream, "\t\t\t\t\tEmission = {}", material.Emission);
+
+		if (material.Type == BSDFType::Glass)
+			std::println(stream, "\t\t\t\t\tIOR = {}", material.IOR);
+
+		std::print(stream, "\n");
+	}
+
 	std::println(stream, "Spheres:");
 	for (auto& [name, sphere] : m_SphereMap)
 	{
 		std::println(stream, "\t{}:", name);
 		std::println(stream, "\t\t\t\t\tPosition = ({}, {}, {})", sphere.Position.x, sphere.Position.y, sphere.Position.z);
 		std::println(stream, "\t\t\t\t\tRadius = {}", sphere.Radius);
-		std::println(stream, "\t\t\t\t\tType = {}", sphere.material.Type);
-		std::println(stream, "\t\t\t\t\tAlbedo = ({}, {}, {})", sphere.material.Albedo.x, sphere.material.Albedo.y, sphere.material.Albedo.z);
-		std::println(stream, "\t\t\t\t\tRoughness = {}", sphere.material.Roughness);
-
-		if (sphere.material.Emission != 0.0)
-			std::println(stream, "\t\t\t\t\tEmission = {}", sphere.material.Emission);
-
-		if (sphere.material.Type == BSDFType::Glass)
-			std::println(stream, "\t\t\t\t\tIOR = {}", sphere.material.IOR);
-
+		std::println(stream, "\t\t\t\t\tMaterial = \"{}\"", sphere.MaterialName);
 		std::print(stream, "\n");
 	}
 
@@ -116,21 +133,26 @@ void Scene::Save(const std::string& filepath)
 
 std::string Scene::GetSphereName(const std::string& line, const int& LineNumber, const std::string& filepath)
 {
-	std::string name;
-
-	char c;
-	for (int i = 0; i < line.find(":"); i++)
-	{
-		c = line.at(i);
-
-		if (isalnum(c) || c == '_')
-			name.push_back(c);
-	}
+	std::string name = GetToken(line, ":");
 
 	if (m_SphereMap.find(name) != m_SphereMap.end())
 	{
 		std::println("SCENE FILE PARSE FAILED: at line {} in {}", LineNumber, filepath);
 		std::println("Sphere {} already exists\n", name);
+		return std::string("");
+	}
+
+	return name;
+}
+
+std::string Scene::GetMaterialName(const std::string& line, const int& LineNumber, const std::string& filepath)
+{
+	std::string name = GetToken(line, ":");
+
+	if (m_MaterialMap.find(name) != m_MaterialMap.end())
+	{
+		std::println("SCENE FILE PARSE FAILED: at line {} in {}", LineNumber, filepath);
+		std::println("Material {} already exists\n", name);
 		return std::string("");
 	}
 
@@ -149,7 +171,7 @@ void inline Scene::ParseTargetSpheres(std::string& TargetName, const std::string
 	if (line.find_first_not_of(' ') != std::string::npos && TargetName.empty())
 		std::println("SCENE FILE PARSE FAILED: No target name at line {} in {}", LineNumber, filepath);
 	
-	else if (TokenPresentAfter(line, "Position", ":"))
+	if (TokenPresentAfter(line, "Position", ":"))
 	{
 		if (!EqualPresent(line, LineNumber, filepath))
 			return;
@@ -182,7 +204,43 @@ void inline Scene::ParseTargetSpheres(std::string& TargetName, const std::string
 		m_SphereMap[TargetName].Radius = Radius;
 	}
 
-	else if (TokenPresentAfter(line, "Type", ":"))
+	else if (TokenPresentAfter(line, "Material", ":"))
+	{
+		if (!EqualPresent(line, LineNumber, filepath))
+			return;
+
+		if (!TokenPresent(line, "\""))
+		{
+			std::println("SCENE FILE PARSE FAILED: SYNTAX ERROR: missing '\"' at line: {}, in {}", LineNumber, filepath);
+			return;
+		}
+
+		size_t start = line.find("\"") + 1;
+		const std::string& token = GetToken(line, start, "\"");
+		if (m_MaterialMap.find(token) == m_MaterialMap.end())
+		{
+			std::println("SCENE FILE PARSE FAILED: at line: {}, in {}", LineNumber, filepath);
+			std::println("Trying to assign material {} to sphere {}, material undefined", token, TargetName);
+			return;
+		}
+
+		m_SphereMap[TargetName].MaterialName = token;
+	}
+}
+
+void inline Scene::ParseTargetMaterials(std::string& TargetName, const std::string& line, const int& LineNumber, const std::string& filepath)
+{
+	if (line.find(":") != std::string::npos)
+	{
+		TargetName = GetMaterialName(line, LineNumber, filepath);
+		if (TargetName.empty())
+			std::println("SCENE FILE PARSE FAILED: No target name at line {} in {}", LineNumber, filepath);
+	}
+
+	if (line.find_first_not_of(' ') != std::string::npos && TargetName.empty())
+		std::println("SCENE FILE PARSE FAILED: No target name at line {} in {}", LineNumber, filepath);
+
+	if (TokenPresentAfter(line, "Type", ":"))
 	{
 		if (!EqualPresent(line, LineNumber, filepath))
 			return;
@@ -194,15 +252,15 @@ void inline Scene::ParseTargetSpheres(std::string& TargetName, const std::string
 		{
 			char c = line.at(i);
 
-			if (isalnum(c))
+			if (isalnum(c) || c == '_')
 				ShaderType.push_back(c);
 		}
 
 		if (ShaderType == "DiffuseType")
-			m_SphereMap[TargetName].material.Type = BSDFType::Diffuse;
+			m_MaterialMap[TargetName].Type = BSDFType::Diffuse;
 
 		else if (ShaderType == "GlassType")
-			m_SphereMap[TargetName].material.Type = BSDFType::Glass;
+			m_MaterialMap[TargetName].Type = BSDFType::Glass;
 	}
 
 	else if (TokenPresentAfter(line, "Albedo", ":"))
@@ -226,7 +284,7 @@ void inline Scene::ParseTargetSpheres(std::string& TargetName, const std::string
 		found = line.find(",", found + 1) + 1;
 		Color.z = std::stof(line.substr(found));
 
-		m_SphereMap[TargetName].material.Albedo = Color;
+		m_MaterialMap[TargetName].Albedo = Color;
 	}
 
 	else if (TokenPresentAfter(line, "Roughness", ":"))
@@ -236,7 +294,7 @@ void inline Scene::ParseTargetSpheres(std::string& TargetName, const std::string
 
 		auto found = line.find("=");
 		float Roughness = std::stof(line.substr(found + 1));
-		m_SphereMap[TargetName].material.Roughness = Roughness;
+		m_MaterialMap[TargetName].Roughness = Roughness;
 	}
 
 	else if (TokenPresentAfter(line, "Emission", ":"))
@@ -246,7 +304,7 @@ void inline Scene::ParseTargetSpheres(std::string& TargetName, const std::string
 
 		auto found = line.find("=");
 		float Emission = std::stof(line.substr(found + 1));
-		m_SphereMap[TargetName].material.Emission = Emission;
+		m_MaterialMap[TargetName].Emission = Emission;
 	}
 
 	else if (TokenPresentAfter(line, "IOR", ":"))
@@ -256,7 +314,7 @@ void inline Scene::ParseTargetSpheres(std::string& TargetName, const std::string
 
 		auto found = line.find("=");
 		float IOR = std::stof(line.substr(found + 1));
-		m_SphereMap[TargetName].material.IOR = IOR;
+		m_MaterialMap[TargetName].IOR = IOR;
 	}
 }
 

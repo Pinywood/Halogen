@@ -88,6 +88,13 @@ void RayTracer::FramebufferReSize(const int& Width, const int& Height)
 
 void RayTracer::AddToBuffer(const std::string& name, const Sphere& Sphere)
 {
+	const auto& found = m_SphereIndexMap.find(name);
+	if (found != m_SphereIndexMap.end())
+	{
+		std::println("Attempting to add Sphere {}, already exists, try using SwapBufferObject instead", name);
+		return;
+	}
+
 	m_SphereList.push_back(Sphere);
 	m_SphereIndexMap[name] = m_SphereList.size() - 1;
 
@@ -102,8 +109,16 @@ void RayTracer::AddToBuffer(const std::string& name, const Sphere& Sphere)
 
 void RayTracer::SwapBufferObject(const std::string& name, const Sphere& Sphere)
 {
-	int index = m_SphereIndexMap.at(name);
+	const auto& found = m_SphereIndexMap.find(name);
+	if (found == m_SphereIndexMap.end())
+	{
+		std::println("Attempting to Swap Object {}, does not exist, try AddToBuffer instead", name);
+		return;
+	}
+
+	int index = found->second;
 	m_SphereList.at(index) = Sphere;
+
 	if (!m_Accumulating)
 		return;
 
@@ -115,12 +130,65 @@ void RayTracer::ClearBuffer()
 {
 	m_SphereList.clear();
 	m_SphereIndexMap.clear();
+
 	if (!m_Accumulating)
 		return;
 
-	m_RTShader.AddToLookUp("ModelCount", m_SphereList.size());
+	m_RTShader.AddToLookUp("ModelCount", 1);
 	m_RTShader.ReCompile();
-	UploadSpheres();
+	ResetAccumulation();
+}
+
+void RayTracer::AddMaterial(const std::string& name, const Material& material)
+{
+	const auto& found = m_MaterialIndexMap.find(name);
+	if (found != m_MaterialIndexMap.end())
+	{
+		std::println("Attempting to add Material {}, already exists, try using SwapMaterial instead", name);
+		return;
+	}
+
+	m_MaterialList.push_back(material);
+	m_MaterialIndexMap[name] = m_MaterialList.size() - 1;
+
+	if (!m_Accumulating)
+		return;
+
+	m_RTShader.AddToLookUp("MaterialCount", m_MaterialList.size());
+	m_RTShader.ReCompile();
+	UploadMaterial(m_MaterialList.size() - 1);
+	ResetAccumulation();
+}
+
+void RayTracer::SwapMaterial(const std::string& name, const Material& material)
+{
+	const auto& found = m_MaterialIndexMap.find(name);
+	if (found == m_MaterialIndexMap.end())
+	{
+		std::println("Attempting to Swap Material {}, does not exist, try AddMaterial instead", name);
+		return;
+	}
+
+	int index = found->second;
+	m_MaterialList.at(index) = material;
+
+	if (!m_Accumulating)
+		return;
+
+	UploadMaterial(index);
+	ResetAccumulation();
+}
+
+void RayTracer::ClearMaterials()
+{
+	m_MaterialList.clear();
+	m_MaterialIndexMap.clear();
+
+	if (!m_Accumulating)
+		return;
+
+	m_RTShader.AddToLookUp("MaterialCount", 1);
+	m_RTShader.ReCompile();
 	ResetAccumulation();
 }
 
@@ -140,21 +208,47 @@ void RayTracer::UploadSphere(const int& index) const
 {
 	std::string out = std::format("SphereList[{}]", std::to_string(index));
 
-	m_RTShader.SetFloat(out + ".Position", m_SphereList.at(index).Position);
-	m_RTShader.SetFloat(out + ".Radius", m_SphereList.at(index).Radius);
-	m_RTShader.SetInt(out + ".Mat.Type", (int)m_SphereList.at(index).material.Type);
-	m_RTShader.SetFloat(out + ".Mat.Albedo", m_SphereList.at(index).material.Albedo);
-	m_RTShader.SetFloat(out + ".Mat.Roughness", m_SphereList.at(index).material.Roughness);
-	m_RTShader.SetFloat(out + ".Mat.Emission", m_SphereList.at(index).material.Emission);
-	m_RTShader.SetFloat(out + ".Mat.IOR", m_SphereList.at(index).material.IOR);
+	const Sphere& sphere = m_SphereList[index];
+	m_RTShader.SetFloat(out + ".Position", sphere.Position);
+	m_RTShader.SetFloat(out + ".Radius", sphere.Radius);
+
+	const auto& found = m_MaterialIndexMap.find(sphere.MaterialName);
+	if (found == m_MaterialIndexMap.end())
+	{
+		for (auto& [name, sphereindex] : m_SphereIndexMap)						//Cache the inverse map
+		{
+			if (sphereindex == index)
+				std::println("Sphere {} has material {}, does not exist!", name, sphere.MaterialName);
+		}
+
+		return;
+	}
+
+	m_RTShader.SetInt(out + ".MatIndex", found->second);
 }
 
 void RayTracer::UploadSpheres() const
 {
 	for (size_t i = 0; i < m_SphereList.size(); i++)
-	{
 		UploadSphere(i);
-	}
+}
+
+void RayTracer::UploadMaterial(const int& index) const
+{
+	std::string out = std::format("MaterialList[{}]", std::to_string(index));
+
+	const Material& material = m_MaterialList[index];
+	m_RTShader.SetInt(out + ".Type", (int)material.Type);
+	m_RTShader.SetFloat(out + ".Albedo", material.Albedo);
+	m_RTShader.SetFloat(out + ".Roughness", material.Roughness);
+	m_RTShader.SetFloat(out + ".Emission", material.Emission);
+	m_RTShader.SetFloat(out + ".IOR", material.IOR);
+}
+
+void RayTracer::UploadMaterials() const
+{
+	for (int i = 0; i < m_MaterialList.size(); i++)
+		UploadMaterial(i);
 }
 
 void RayTracer::Render() const
@@ -187,7 +281,9 @@ void RayTracer::StartAccumulation(const unsigned int& RenderSlot, const unsigned
 	m_PostProcessShader.SetUniform("Image", m_AccumulationTexSlot);
 
 	m_RTShader.AddToLookUp("ModelCount", m_SphereList.size());
+	m_RTShader.AddToLookUp("MaterialCount", m_MaterialList.size());
 	m_RTShader.ReCompile();
+	UploadMaterials();
 	UploadSpheres();
 	ResetAccumulation();
 }
@@ -286,6 +382,12 @@ void RayTracer::LoadScene(const Scene& scene)
 	Setting(PostProcess_Setting::Exposure, scene.m_Exposure);
 
 	ClearBuffer();
+	ClearMaterials();
+
+	for (auto& [name, material] : scene.m_MaterialMap)
+	{
+		AddMaterial(name, material);
+	}
 
 	for (auto& [name, sphere] : scene.m_SphereMap)
 	{

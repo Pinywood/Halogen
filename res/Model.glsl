@@ -27,5 +27,5 @@ struct Sphere
 {
 	vec3 Position;
 	float Radius;
-	Material Mat;
+	int MatIndex;
 };

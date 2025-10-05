@@ -23,3 +23,41 @@ bool TokenPresentAfter(const std::string& string, const std::string& token, cons
 
 	return false;
 }
+
+std::string GetToken(const std::string& string, const std::string& delim)
+{
+	std::string token;
+
+	size_t found = string.find(delim);
+	if (found == std::string::npos)
+		found = string.length();
+
+	char c;
+	for (int i = 0; i < found; i++)
+	{
+		c = string.at(i);
+		if (isalnum(c) || c == '_')
+			token.push_back(c);
+	}
+
+	return token;
+}
+
+std::string GetToken(const std::string& string, const size_t& start, const std::string& delim)
+{
+	std::string token;
+
+	size_t found = string.find(delim, start);
+	if (found == std::string::npos)
+		found = string.length();
+
+	char c;
+	for (int i = start; i < found; i++)
+	{
+		c = string.at(i);
+		if (isalnum(c) || c == '_')
+			token.push_back(c);
+	}
+
+	return token;
+}

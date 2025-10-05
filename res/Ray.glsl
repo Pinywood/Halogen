@@ -157,10 +157,10 @@ void Scatter(Diffuse diffuse, inout Ray ray, HitRecord record, in float seed)
 	if(abs(randVec.x) < 0.001 && abs(randVec.y) < 0.001 && abs(randVec.z) < 0.001)		//Catch reflection rays close to 0
 		randVec = normal;
 
-	ray.RayDir = mix(reflect(ray.RayDir, normal), randVec, record.HitSphere.Mat.Roughness);
+	ray.RayDir = mix(reflect(ray.RayDir, normal), randVec, diffuse.Roughness);
 	ray.RayDir = normalize(ray.RayDir);
 
-	ray.RayColor *= record.HitSphere.Mat.Albedo;
+	ray.RayColor *= diffuse.Albedo;
 }
 
 float reflectance(float cosine, float IOR)
@@ -200,14 +200,15 @@ void Scatter(Glass glass, inout Ray ray, HitRecord record, in float seed)
 
 void UpdateRay(inout Ray ray, HitRecord record, in float seed)
 {
-	switch(record.HitSphere.Mat.Type)
+	Material material = MaterialList[record.HitSphere.MatIndex];
+	switch(material.Type)
 	{
 		case DiffuseType:
 		{
 			Diffuse diffuse;
-			diffuse.Albedo = record.HitSphere.Mat.Albedo;
-			diffuse.Roughness = record.HitSphere.Mat.Roughness;
-			diffuse.Emission = record.HitSphere.Mat.Emission;
+			diffuse.Albedo = material.Albedo;
+			diffuse.Roughness = material.Roughness;
+			diffuse.Emission = material.Emission;
 			Scatter(diffuse, ray, record, seed);
 			break;
 		}
@@ -215,8 +216,8 @@ void UpdateRay(inout Ray ray, HitRecord record, in float seed)
 		case GlassType:
 		{
 			Glass glass;
-			glass.Albedo = record.HitSphere.Mat.Albedo;
-			glass.IOR = record.HitSphere.Mat.IOR;
+			glass.Albedo = material.Albedo;
+			glass.IOR = material.IOR;
 			Scatter(glass, ray, record, seed);
 			break;
 		}
@@ -265,9 +266,11 @@ vec3 TraceRay(in Ray ray, in Sphere Models[ModelCount], in int max_bounces, in f
 			return color.rgb;
 		}
 
-		if(record.HitSphere.Mat.Emission != 0.0)
+		Material material = MaterialList[record.HitSphere.MatIndex];
+
+		if(material.Emission != 0.0)
 		{
-			ray.RayColor *= record.HitSphere.Mat.Albedo * record.HitSphere.Mat.Emission;
+			ray.RayColor *= material.Albedo * material.Emission;
 			return ray.RayColor;
 		}
 

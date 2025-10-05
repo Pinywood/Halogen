@@ -22,6 +22,7 @@
 
 #include <iostream>
 #include <print>
+#include <memory>
 
 float speed = 1.0;
 
@@ -207,12 +208,13 @@ int main()
 
 	glfwSwapInterval(1);
 
-	RayTracer RayTracer(WindowWidth, WindowHeight);
+	ImGuiIO& io = SetupImGui(window);
+
+	std::unique_ptr<RayTracer> raytracer = std::make_unique<RayTracer>(WindowWidth, WindowHeight);
+	RayTracer& RayTracer = *raytracer;
 	
 	Scene scene("res/Scene.hgns");
 	RayTracer.LoadScene(scene);
-
-	ImGuiIO& io = SetupImGui(window);
 
 	const int RenderedImage = 1;						//TexSlot 0 is used for binding through indirect calls (like resize)
 	const int AccumulatedImage = 2;
@@ -268,7 +270,7 @@ int main()
 		ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 
 		{
-			ImGui::Begin("Renderer Settings");
+			ImGui::Begin("Render Settings");
 
 			bool modified = false;
 
@@ -315,25 +317,53 @@ int main()
 		}
 
 		{
-			ImGui::Begin("Scene");
+			ImGui::Begin("Scene Settings");
 
+			ImGui::Text("Spheres");
 			for (auto& [name, sphere] : scene.m_SphereMap)
+			{
+				ImGui::PushID(name.c_str());
+				bool modified = false;
+
+				if (name != "Ground")
+				{
+					ImGui::Text(name.c_str());
+					modified |= ImGui::SliderFloat("Radius", &sphere.Radius, 0.0f, 1.0f);
+				}
+
+				if (modified)
+					RayTracer.SwapBufferObject(name, sphere);
+
+				ImGui::Separator();
+				ImGui::PopID();
+			}
+
+			ImGui::End();
+		}
+
+		{
+			ImGui::Begin("Materials");
+
+			for (auto& [name, material] : scene.m_MaterialMap)
 			{
 				ImGui::PushID(name.c_str());
 				bool modified = false;
 
 				ImGui::Text(name.c_str());
 
-				if (name != "Ground")
-					modified |= ImGui::SliderFloat("Radius", &sphere.Radius, 0.0f, 1.0f);
+				modified |= ImGui::ColorEdit3("Albedo", &material.Albedo.x);
 
-				modified |= ImGui::SliderFloat("Roughness", &sphere.material.Roughness, 0.0f, 1.0f);
-				modified |= ImGui::ColorEdit3("Color", &sphere.material.Albedo.x);
-				if(sphere.material.Emission != 0.0)
-					modified |= ImGui::SliderFloat("Emission", &sphere.material.Emission, 0.01f, 50.0f);
+				if(material.Type == BSDFType::Glass)
+					modified |= ImGui::SliderFloat("IOR", &material.IOR, 0.0f, 30.0f);
+
+				else
+				{
+					modified |= ImGui::SliderFloat("Roughness", &material.Roughness, 0.0f, 1.0f);
+					modified |= ImGui::SliderFloat("Emission", &material.Emission, 0.0f, 30.0f);
+				}
 
 				if (modified)
-					RayTracer.SwapBufferObject(name, sphere);
+					RayTracer.SwapMaterial(name, material);
 
 				ImGui::Separator();
 				ImGui::PopID();

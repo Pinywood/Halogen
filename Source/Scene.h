@@ -43,10 +43,7 @@ static bool EqualPresent(const std::string& string, const int& Line, const std::
 {
 	bool found = TokenPresent(string, "=");
 	if (!found)
-	{
-		std::println("{}", string);
-		std::println("SCENE FILE PARSE FAILED: SYNTAX ERROR: missing '=' at line {} in {}", Line, filepath);
-	}
+		std::println("SCENE FILE PARSE FAILED: SYNTAX ERROR: missing '=' at line {}, in {}", Line, filepath);
 
 	return found;
 }
@@ -55,7 +52,7 @@ static bool LeftParenPresent(const std::string& string, const int& Line, const s
 {
 	bool found = TokenPresent(string, "(");
 	if (!found)
-		std::println("SCENE FILE PARSE FAILED: SYNTAX ERROR: missing '(' at line {} in {}", Line, filepath);
+		std::println("SCENE FILE PARSE FAILED: SYNTAX ERROR: missing '(' at line {}, in {}", Line, filepath);
 
 	return found;
 }
@@ -80,6 +77,7 @@ public:
 	float m_Exposure = 1.5;
 
 	std::map<std::string, Sphere> m_SphereMap;
+	std::map<std::string, Material> m_MaterialMap;
 	Camera m_Camera;
 
 public:
@@ -94,7 +92,9 @@ private:
 
 private:
 	std::string GetSphereName(const std::string& line, const int& LineNumber, const std::string& filepath);
+	std::string GetMaterialName(const std::string& line, const int& LineNumber, const std::string& filepath);
 	void ParseTargetSpheres(std::string& TargetName, const std::string& line, const int& LineNumber, const std::string& filepath);
+	void ParseTargetMaterials(std::string& TargetName, const std::string& line, const int& LineNumber, const std::string& filepath);
 	void ParseTargetSettings(const std::string& line, const int& LineNumber, const std::string& filepath);
 	void ParseTargetCamera(const std::string& line, const int& LineNumber, const std::string& filepath);
 

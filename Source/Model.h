@@ -34,6 +34,6 @@ struct Material
 struct Sphere
 {
 	Vec3 Position;
-	float Radius;
-	Material material;
+	float Radius = 1.0;
+	std::string MaterialName;
 };

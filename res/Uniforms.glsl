@@ -12,6 +12,8 @@ uniform float AspectRatio;
 uniform mat3 View;
 const int ModelCount = 1;
 uniform Sphere SphereList[ModelCount];
+const int MaterialCount = 1;
+uniform Material MaterialList[MaterialCount];
 
 uniform float SunRadius;										//Should be in [0, 1], it is the cos of the angular radius
 uniform float SunIntensity;

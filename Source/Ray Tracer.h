@@ -117,10 +117,15 @@ public:
 	void ResetAccumulation();
 	void PostProcess();
 	void Clear(const float& Red = 0.0f, const float& Green = 0.0f, const float& Blue = 0.0f) const;
+	unsigned int RenderedSamples() const;
+
 	void AddToBuffer(const std::string& name, const Sphere& Sphere);
 	void SwapBufferObject(const std::string& name, const Sphere& Sphere);
 	void ClearBuffer();
-	unsigned int RenderedSamples() const;
+
+	void AddMaterial(const std::string& name, const Material& material);
+	void SwapMaterial(const std::string& name, const Material& material);
+	void ClearMaterials();
 
 	void SetCameraPosition(const glm::vec3& Position);
 	void SetCameraOrientation(const float& yaw, const float& pitch);
@@ -153,6 +158,9 @@ private:
 	void UploadSphere(const int& index) const;
 	void UploadSpheres() const;
 
+	void UploadMaterial(const int& index) const;
+	void UploadMaterials() const;
+
 private:
 	mutable Shader m_RTShader = Shader("res/Ray Trace.glsl");
 	mutable Shader m_AccumulationShader = Shader("res/Accumulator.glsl");
@@ -175,4 +183,7 @@ private:
 
 	std::vector<Sphere> m_SphereList;
 	std::unordered_map<std::string, int> m_SphereIndexMap;
+
+	std::vector<Material> m_MaterialList;
+	std::unordered_map<std::string, int> m_MaterialIndexMap;
 };
