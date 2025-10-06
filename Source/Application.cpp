@@ -173,7 +173,7 @@ ImGuiIO& SetupImGui(GLFWwindow* window)
 	return io;
 }
 
-int main()
+int main(int argc, char** argv)
 {
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -213,7 +213,13 @@ int main()
 	std::unique_ptr<RayTracer> raytracer = std::make_unique<RayTracer>(WindowWidth, WindowHeight);
 	RayTracer& RayTracer = *raytracer;
 	
-	Scene scene("res/Scene.hgns");
+	Scene scene;
+	if (argc > 1 && scene.Load(argv[1]))
+		std::println("Loaded {} successfully\n", argv[1]);
+
+	else
+		scene.Load("res/Scene.hgns");
+
 	RayTracer.LoadScene(scene);
 
 	const int RenderedImage = 1;						//TexSlot 0 is used for binding through indirect calls (like resize)

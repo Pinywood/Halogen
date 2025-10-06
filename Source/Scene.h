@@ -85,7 +85,7 @@ public:
 	Scene(const std::string& filepath);
 	void Save();
 	void Save(const std::string& filepath);
-	void Load(const std::string& filepath);
+	bool Load(const std::string& filepath);
 
 private:
 	std::string m_Filepath;
@@ -93,10 +93,10 @@ private:
 private:
 	std::string GetSphereName(const std::string& line, const int& LineNumber, const std::string& filepath);
 	std::string GetMaterialName(const std::string& line, const int& LineNumber, const std::string& filepath);
-	void ParseTargetSpheres(std::string& TargetName, const std::string& line, const int& LineNumber, const std::string& filepath);
-	void ParseTargetMaterials(std::string& TargetName, const std::string& line, const int& LineNumber, const std::string& filepath);
-	void ParseTargetSettings(const std::string& line, const int& LineNumber, const std::string& filepath);
-	void ParseTargetCamera(const std::string& line, const int& LineNumber, const std::string& filepath);
+	bool ParseTargetSpheres(std::string& TargetName, const std::string& line, const int& LineNumber, const std::string& filepath);
+	bool ParseTargetMaterials(std::string& TargetName, const std::string& line, const int& LineNumber, const std::string& filepath);
+	bool ParseTargetSettings(const std::string& line, const int& LineNumber, const std::string& filepath);
+	bool ParseTargetCamera(const std::string& line, const int& LineNumber, const std::string& filepath);
 
 	template<typename T>
 	void Setting(const Scene_Setting& Setting, const T& value);

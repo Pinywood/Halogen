@@ -5,7 +5,7 @@ Scene::Scene(const std::string& filepath)
 	Load(filepath);
 }
 
-void Scene::Load(const std::string& filepath)
+bool Scene::Load(const std::string& filepath)
 {
 	std::ifstream stream(filepath);
 	std::string line;
@@ -18,8 +18,8 @@ void Scene::Load(const std::string& filepath)
 
 	if (!stream.is_open())
 	{
-		std::println("Failed to Load Scene: {}", filepath);
-		return;
+		std::println("Failed to Load Scene: {}\n", filepath);
+		return false;
 	}
 
 	m_Filepath = filepath;
@@ -28,6 +28,8 @@ void Scene::Load(const std::string& filepath)
 	std::string SphereTargetName;
 	std::string MaterialTargetName;
 	size_t LineNumber = 0;
+
+	bool success = true;
 
 	while (getline(stream, line))
 	{
@@ -61,18 +63,27 @@ void Scene::Load(const std::string& filepath)
 			getline(stream, line);
 		}
 
-		if (target == Target::Spheres)
-			ParseTargetSpheres(SphereTargetName, line, LineNumber, filepath);
+		if (target == Target::Spheres && !ParseTargetSpheres(SphereTargetName, line, LineNumber, filepath))
+			success = false;
 
-		else if (target == Target::Materials)
-			ParseTargetMaterials(MaterialTargetName, line, LineNumber, filepath);
+		else if (target == Target::Materials && !ParseTargetMaterials(MaterialTargetName, line, LineNumber, filepath))
+			success = false;
 
-		else if (target == Target::Settings)
-			ParseTargetSettings(line, LineNumber, filepath);
+		else if (target == Target::Settings && !ParseTargetSettings(line, LineNumber, filepath))
+			success = false;
 
-		else if (target == Target::Camera)
-			ParseTargetCamera(line, LineNumber, filepath);
+		else if (target == Target::Camera && !ParseTargetCamera(line, LineNumber, filepath))
+			success = false;
 	}
+
+	if (!success)
+	{
+		m_MaterialMap.clear();
+		m_SphereMap.clear();
+		std::println("Failed to Load Scene: {}\n", filepath);
+	}
+
+	return success;
 }
 
 void Scene::Save()
@@ -159,25 +170,32 @@ std::string Scene::GetMaterialName(const std::string& line, const int& LineNumbe
 	return name;
 }
 
-void inline Scene::ParseTargetSpheres(std::string& TargetName, const std::string& line, const int& LineNumber, const std::string& filepath)
+bool inline Scene::ParseTargetSpheres(std::string& TargetName, const std::string& line, const int& LineNumber, const std::string& filepath)
 {
 	if (line.find(":") != std::string::npos)
 	{
 		TargetName = GetSphereName(line, LineNumber, filepath);
 		if (TargetName.empty())
+		{
 			std::println("SCENE FILE PARSE FAILED: No target name at line {} in {}", LineNumber, filepath);
+			return false;
+		}
 	}
 
 	if (line.find_first_not_of(' ') != std::string::npos && TargetName.empty())
+	{
 		std::println("SCENE FILE PARSE FAILED: No target name at line {} in {}", LineNumber, filepath);
+		return false;
+	}
 	
 	if (TokenPresentAfter(line, "Position", ":"))
 	{
 		if (!EqualPresent(line, LineNumber, filepath))
-			return;
+			return false;
 
 		if (!LeftParenPresent(line, LineNumber, filepath))
-			return;
+			return false;
+
 		auto found = line.find("(");
 
 		Vec3 Position;
@@ -197,7 +215,7 @@ void inline Scene::ParseTargetSpheres(std::string& TargetName, const std::string
 	else if (TokenPresentAfter(line, "Radius", ":"))
 	{
 		if (!EqualPresent(line, LineNumber, filepath))
-			return;
+			return false;
 
 		auto found = line.find("=");
 		float Radius = std::stof(line.substr(found + 1));
@@ -207,12 +225,12 @@ void inline Scene::ParseTargetSpheres(std::string& TargetName, const std::string
 	else if (TokenPresentAfter(line, "Material", ":"))
 	{
 		if (!EqualPresent(line, LineNumber, filepath))
-			return;
+			return false;
 
 		if (!TokenPresent(line, "\""))
 		{
 			std::println("SCENE FILE PARSE FAILED: SYNTAX ERROR: missing '\"' at line: {}, in {}", LineNumber, filepath);
-			return;
+			return false;
 		}
 
 		size_t start = line.find("\"") + 1;
@@ -221,29 +239,37 @@ void inline Scene::ParseTargetSpheres(std::string& TargetName, const std::string
 		{
 			std::println("SCENE FILE PARSE FAILED: at line: {}, in {}", LineNumber, filepath);
 			std::println("Trying to assign material {} to sphere {}, material undefined", token, TargetName);
-			return;
+			return false;
 		}
 
 		m_SphereMap[TargetName].MaterialName = token;
 	}
+
+	return true;
 }
 
-void inline Scene::ParseTargetMaterials(std::string& TargetName, const std::string& line, const int& LineNumber, const std::string& filepath)
+bool inline Scene::ParseTargetMaterials(std::string& TargetName, const std::string& line, const int& LineNumber, const std::string& filepath)
 {
 	if (line.find(":") != std::string::npos)
 	{
 		TargetName = GetMaterialName(line, LineNumber, filepath);
 		if (TargetName.empty())
+		{
 			std::println("SCENE FILE PARSE FAILED: No target name at line {} in {}", LineNumber, filepath);
+			return false;
+		}
 	}
 
 	if (line.find_first_not_of(' ') != std::string::npos && TargetName.empty())
+	{
 		std::println("SCENE FILE PARSE FAILED: No target name at line {} in {}", LineNumber, filepath);
+		return false;
+	}
 
 	if (TokenPresentAfter(line, "Type", ":"))
 	{
 		if (!EqualPresent(line, LineNumber, filepath))
-			return;
+			return false;
 
 		auto found = line.find("=");
 
@@ -266,10 +292,10 @@ void inline Scene::ParseTargetMaterials(std::string& TargetName, const std::stri
 	else if (TokenPresentAfter(line, "Albedo", ":"))
 	{
 		if (!EqualPresent(line, LineNumber, filepath))
-			return;
+			return false;
 
 		if (!LeftParenPresent(line, LineNumber, filepath))
-			return;
+			return false;
 
 		auto found = line.find("(");
 
@@ -290,7 +316,7 @@ void inline Scene::ParseTargetMaterials(std::string& TargetName, const std::stri
 	else if (TokenPresentAfter(line, "Roughness", ":"))
 	{
 		if (!EqualPresent(line, LineNumber, filepath))
-			return;
+			return false;
 
 		auto found = line.find("=");
 		float Roughness = std::stof(line.substr(found + 1));
@@ -300,7 +326,7 @@ void inline Scene::ParseTargetMaterials(std::string& TargetName, const std::stri
 	else if (TokenPresentAfter(line, "Emission", ":"))
 	{
 		if (!EqualPresent(line, LineNumber, filepath))
-			return;
+			return false;
 
 		auto found = line.find("=");
 		float Emission = std::stof(line.substr(found + 1));
@@ -310,21 +336,23 @@ void inline Scene::ParseTargetMaterials(std::string& TargetName, const std::stri
 	else if (TokenPresentAfter(line, "IOR", ":"))
 	{
 		if (!EqualPresent(line, LineNumber, filepath))
-			return;
+			return false;
 
 		auto found = line.find("=");
 		float IOR = std::stof(line.substr(found + 1));
 		m_MaterialMap[TargetName].IOR = IOR;
 	}
+
+	return true;
 }
 
-void inline Scene::ParseTargetSettings(const std::string& line, const int& LineNumber, const std::string& filepath)
+bool inline Scene::ParseTargetSettings(const std::string& line, const int& LineNumber, const std::string& filepath)
 {
 	if (line.find_first_not_of(' ') == std::string::npos)
-		return;
+		return true;
 
 	if (!EqualPresent(line, LineNumber, filepath))
-		return;
+		return false;
 
 	auto found = line.find("=");
 
@@ -344,15 +372,18 @@ void inline Scene::ParseTargetSettings(const std::string& line, const int& LineN
 	}
 
 	else
+	{
 		std::println("SCENE FILE PARSE FAILED: Value is not a float at line {} in {}", LineNumber, filepath);
+		return false;
+	}
 }
 
-void inline Scene::ParseTargetCamera(const std::string& line, const int& LineNumber, const std::string& filepath)
+bool inline Scene::ParseTargetCamera(const std::string& line, const int& LineNumber, const std::string& filepath)
 {
 	if (TokenPresent(line, "Yaw"))
 	{
 		if (!EqualPresent(line, LineNumber, filepath))
-			return;
+			return false;
 
 		auto found = line.find("=");
 		m_Camera.SetYaw(std::stof(line.substr(found + 1)));
@@ -361,7 +392,7 @@ void inline Scene::ParseTargetCamera(const std::string& line, const int& LineNum
 	else if (TokenPresent(line, "Pitch"))
 	{
 		if (!EqualPresent(line, LineNumber, filepath))
-			return;
+			return false;
 
 		auto found = line.find("=");
 		m_Camera.SetPitch(std::stof(line.substr(found + 1)));
@@ -370,10 +401,10 @@ void inline Scene::ParseTargetCamera(const std::string& line, const int& LineNum
 	else if (TokenPresent(line, "Position"))
 	{
 		if (!EqualPresent(line, LineNumber, filepath))
-			return;
+			return false;
 
 		if (!LeftParenPresent(line, LineNumber, filepath))
-			return;
+			return false;
 		auto found = line.find("(");
 
 		Vec3 Position;
@@ -389,4 +420,6 @@ void inline Scene::ParseTargetCamera(const std::string& line, const int& LineNum
 
 		m_Camera.m_Position = glm::vec3(Position.x, Position.y, Position.z);
 	}
+
+	return true;
 }
