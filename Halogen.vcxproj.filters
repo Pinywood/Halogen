@@ -72,6 +72,9 @@
     <ClCompile Include="Source\Tokenization.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\HalogenUI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Camera.h">
@@ -138,6 +141,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\Tokenization.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\HalogenUI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -22,8 +22,6 @@ bool Scene::Load(const std::string& filepath)
 		return false;
 	}
 
-	m_Filepath = filepath;
-
 	Target target = Target::None;
 	std::string SphereTargetName;
 	std::string MaterialTargetName;
@@ -81,8 +79,10 @@ bool Scene::Load(const std::string& filepath)
 		m_MaterialMap.clear();
 		m_SphereMap.clear();
 		std::println("Failed to Load Scene: {}\n", filepath);
+		return success;
 	}
 
+	m_Filepath = filepath;
 	return success;
 }
 
