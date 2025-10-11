@@ -9,6 +9,8 @@
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 
+#include "stb_image_write.h"
+
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "VertexBufferLayout.h"
@@ -20,6 +22,7 @@
 #include "OpenGLError.h"
 #include "Scene.h"
 #include "HalogenUI.h"
+#include "Renderer.h"
 
 #include <iostream>
 #include <print>
@@ -50,6 +53,11 @@ bool Turn = false;
 bool Move = false;
 bool CtrlHeld = false;
 bool Save = false;
+bool SaveImage = false;
+
+float Zoom = 1.0;
+
+Vec2 Shift;
 
 const float Pi = 3.141592653589;
 
@@ -58,8 +66,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	WindowWidth = width;
 	WindowHeight = height;
 	
-	glViewport(0, 0, WindowWidth, WindowHeight);
-
 	Resized = true;
 }
 
@@ -114,6 +120,9 @@ void ProcessInput(GLFWwindow* window)
 		Move = true;
 		deltaY = -distance;
 	}
+
+	if(!MoveEnable && !CtrlHeld)
+		Shift += Vec2(-deltaX, deltaZ) * (1.0 / Zoom);
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -136,6 +145,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		if(action != GLFW_RELEASE)
 			CtrlHeld = true;
 	}
+
+	if (key == GLFW_KEY_F11 && action == GLFW_PRESS)
+		SaveImage = true;
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
@@ -153,6 +165,23 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	LastY = ypos;
 
 	Turn = true;
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	float Sensitivity = 1.1;
+	Sensitivity = pow(Sensitivity, yoffset);
+
+	if(!MoveEnable)
+		Zoom *= Sensitivity;
+}
+
+void SaveRender(const char* filepath, RayTracer& RayTracer)
+{
+	unsigned char* Image = RayTracer.GetRenderedImage();
+	stbi_flip_vertically_on_write(1);
+	stbi_write_jpg(filepath, RayTracer.GetFramebufferWidth(), RayTracer.GetFramebufferHeight(), 3, Image, 100);
+	delete[] Image;
 }
 
 ImGuiIO& SetupImGui(GLFWwindow* window)
@@ -206,12 +235,18 @@ int main(int argc, char** argv)
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetKeyCallback(window, key_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
 
 	glfwSwapInterval(1);
 
 	ImGuiIO& io = SetupImGui(window);
 
-	RayTracer RayTracer(WindowWidth, WindowHeight);
+	int RenderResolutionX = 1920;
+	int RenderResolutionY = 1080;
+
+	RayTracer RayTracer(RenderResolutionX, RenderResolutionY);
+	Renderer renderer(WindowWidth, WindowHeight);
+	renderer.SetRenderResolution(RenderResolutionX, RenderResolutionY);
 	
 	Scene scene;
 	if (argc > 1 && scene.Load(argv[1]))
@@ -225,19 +260,18 @@ int main(int argc, char** argv)
 	const int RenderedImage = 1;						//TexSlot 0 is used for binding through indirect calls (like resize)
 	const int AccumulatedImage = 2;
 
-	Shader Display("res/Display.glsl");
-	Display.SetUniform("Image", RenderedImage);
-
 	RayTracer.StartAccumulation(RenderedImage, AccumulatedImage);
+	renderer.SetDisplayImage(RenderedImage);
 
-	float SinceLastSave = 0.0;
+	float SinceLastSceneSave = 0.0;
+	float SinceLastRender = 0.0;
 	while (!glfwWindowShouldClose(window))
 	{
 		ProcessInput(window);
 		glfwPollEvents();
 
 		if (Resized)
-			RayTracer.FramebufferReSize(WindowWidth, WindowHeight);
+			renderer.FramebufferResize(WindowWidth, WindowHeight);
 
 		if (MoveEnable)
 		{
@@ -254,18 +288,32 @@ int main(int argc, char** argv)
 			}
 		}
 		
-		else if (Save)
+		else
 		{
-			SinceLastSave = 0.0;
-			scene.m_Camera = RayTracer.GetCamera();
-			scene.Save();
+			if (Save)
+			{
+				SinceLastSceneSave = 0.0;
+				scene.m_Camera = RayTracer.GetCamera();
+				scene.Save();
+			}
+			
+			renderer.SetZoom(Zoom);
+			renderer.SetShift(Shift);
+		}
+
+		if (SaveImage)
+		{
+			SaveRender("render.jpg", RayTracer);
+			SinceLastRender = 0.0;
 		}
 
 		Save = false;
 		Resized = false;
 		Turn = false;
 		Move = false;
-		SinceLastSave += deltaTime;
+		SaveImage = false;
+		SinceLastSceneSave += deltaTime;
+		SinceLastRender += deltaTime;
 
 		currentTime = glfwGetTime();
 		deltaTime = currentTime - prevTime;
@@ -276,7 +324,7 @@ int main(int argc, char** argv)
 		ImGui::NewFrame();
 		ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 
-		HalogenUI::RenderSettings(RayTracer, scene, io, SinceLastSave);
+		HalogenUI::RenderSettings(renderer, RayTracer, scene, io, SinceLastSceneSave, SinceLastRender, RenderResolutionX, RenderResolutionY);
 		HalogenUI::SceneSettings(RayTracer, scene);
 		HalogenUI::MaterialSettings(RayTracer, scene);
 
@@ -288,8 +336,7 @@ int main(int argc, char** argv)
 
 		RayTracer.PostProcess();
 
-		Display.Use();
-		RayTracer.Draw();
+		renderer.Display();
 
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

@@ -75,7 +75,6 @@ void RayTracer::SetDefaultSettings()
 
 void RayTracer::FramebufferReSize(const int& Width, const int& Height)
 {
-	ResetAccumulation();
 	m_FramebufferWidth = Width;
 	m_FramebufferHeight = Height;
 	m_RenderFB.ReSize(m_FramebufferWidth, m_FramebufferHeight);
@@ -296,6 +295,8 @@ void RayTracer::Accumulate()
 		return;
 	}
 
+	glViewport(0, 0, m_FramebufferWidth, m_FramebufferHeight);
+
 	m_RenderFB.Bind(m_RenderTexSlot);
 	m_RTShader.SetUniform("CurrentSample", m_CurrentSample);
 	Render();
@@ -332,9 +333,28 @@ void RayTracer::PostProcess()
 	m_RenderFB.UnBind();
 }
 
+unsigned char* RayTracer::GetRenderedImage() const
+{
+	unsigned char* Image = new unsigned char[3 * m_FramebufferWidth * m_FramebufferHeight];
+	m_RenderFB.Bind(m_RenderTexSlot);
+	glReadPixels(0, 0, m_FramebufferWidth, m_FramebufferHeight, GL_RGB, GL_UNSIGNED_BYTE, Image);
+	m_RenderFB.UnBind();
+	return Image;
+}
+
 unsigned int RayTracer::RenderedSamples() const
 {
 	return m_CurrentSample;
+}
+
+int RayTracer::GetFramebufferWidth() const
+{
+	return m_FramebufferWidth;
+}
+
+int RayTracer::GetFramebufferHeight() const
+{
+	return m_FramebufferHeight;
 }
 
 void RayTracer::SetCameraPosition(const glm::vec3& Position)

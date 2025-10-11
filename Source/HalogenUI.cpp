@@ -2,11 +2,23 @@
 
 namespace HalogenUI
 {
-	void RenderSettings(RayTracer& RayTracer, Scene& scene, ImGuiIO& io, const float& SinceLastSave)
+	void RenderSettings(Renderer& renderer, RayTracer& RayTracer, Scene& scene, ImGuiIO& io, const float& SinceLastSave, const float& SinceLastRender, int& ResX, int& ResY)
 	{
 		ImGui::Begin("Render Settings");
 
+		const float DisplayTime = 0.5;
+
 		bool modified = false;
+
+		modified |= ImGui::DragInt("Resolution X", &ResX);
+		modified |= ImGui::DragInt("Resolution Y", &ResY);
+
+		if (modified)
+		{
+			RayTracer.FramebufferReSize(ResX, ResY);
+			renderer.SetRenderResolution(ResX, ResY);
+			RayTracer.ResetAccumulation();
+		}
 
 		modified |= ImGui::SliderFloat("Sun Radius", &scene.m_SunRadius, 0.0f, 15.0f);
 		modified |= ImGui::SliderFloat("Sun Intensity", &scene.m_SunIntensity, 0.0f, 1000.0f);
@@ -44,8 +56,11 @@ namespace HalogenUI
 
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 
-		if (SinceLastSave < 0.5)
+		if (SinceLastSave < DisplayTime)
 			ImGui::Text("Saved");
+
+		if (SinceLastRender < DisplayTime)
+			ImGui::Text("Exported");
 
 		ImGui::End();
 	}

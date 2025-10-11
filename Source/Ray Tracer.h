@@ -116,8 +116,11 @@ public:
 	void Accumulate();
 	void ResetAccumulation();
 	void PostProcess();
+	unsigned char* GetRenderedImage() const;
 	void Clear(const float& Red = 0.0f, const float& Green = 0.0f, const float& Blue = 0.0f) const;
 	unsigned int RenderedSamples() const;
+	int GetFramebufferWidth() const;
+	int GetFramebufferHeight() const;
 
 	void AddToBuffer(const std::string& name, const Sphere& Sphere);
 	void SwapBufferObject(const std::string& name, const Sphere& Sphere);

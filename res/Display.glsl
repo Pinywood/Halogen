@@ -4,11 +4,19 @@
 layout (location = 0) in vec2 vertexPositions;
 layout (location = 1) in vec2 v_TexCoords;
 
+uniform float DisplayAspectRatio;
+uniform float RenderAspectRatio;
+uniform vec2 Shift;
+uniform float Zoom;
+
 out vec2 f_TexCoords;
 
 void main()
 {
-	gl_Position = vec4(vertexPositions, 0.0, 1.0);
+	vec2 position = vertexPositions * vec2(1.0, DisplayAspectRatio / RenderAspectRatio);
+	position += Shift;
+	position *= Zoom;
+	gl_Position = vec4(position, 0.0, 1.0);
 	f_TexCoords = v_TexCoords;
 }
 

@@ -19,6 +19,7 @@ public:
 	}
 
 	Vec3 operator+(const Vec3& other);
+	void operator+=(const Vec3& other);
 
 	Vec3 operator-(const Vec3& other);
 
@@ -49,6 +50,7 @@ public:
 	}
 
 	Vec2 operator+(const Vec2& other);
+	void operator+=(const Vec2& other);
 
 	Vec2 operator-(const Vec2& other);
 

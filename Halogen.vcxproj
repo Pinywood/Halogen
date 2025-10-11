@@ -141,8 +141,10 @@
     <ClCompile Include="Source\HalogenUI.cpp" />
     <ClCompile Include="Source\IndexBuffer.cpp" />
     <ClCompile Include="Source\Ray Tracer.cpp" />
+    <ClCompile Include="Source\Renderer.cpp" />
     <ClCompile Include="Source\Scene.cpp" />
     <ClCompile Include="Source\Shader.cpp" />
+    <ClCompile Include="Source\stb_image_write.cpp" />
     <ClCompile Include="Source\Tokenization.cpp" />
     <ClCompile Include="Source\VectorMath.cpp" />
     <ClCompile Include="Source\Vendor\ImGui\imgui.cpp" />
@@ -164,7 +166,9 @@
     <ClInclude Include="Source\Model.h" />
     <ClInclude Include="Source\OpenGLError.h" />
     <ClInclude Include="Source\Ray Tracer.h" />
+    <ClInclude Include="Source\Renderer.h" />
     <ClInclude Include="Source\Shader.h" />
+    <ClInclude Include="Source\stb_image_write.h" />
     <ClInclude Include="Source\Tokenization.h" />
     <ClInclude Include="Source\VectorMath.h" />
     <ClInclude Include="Source\Vendor\ImGui\imconfig.h" />
