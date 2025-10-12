@@ -2,7 +2,7 @@
 
 namespace HalogenUI
 {
-	void RenderSettings(Renderer& renderer, RayTracer& RayTracer, Scene& scene, ImGuiIO& io, const float& SinceLastSave, const float& SinceLastRender, int& ResX, int& ResY)
+	void RenderSettings(Renderer& renderer, RayTracer& RayTracer, Scene& scene, ImGuiIO& io, const float& SinceLastSave, const float& SinceLastRender)
 	{
 		ImGui::Begin("Render Settings");
 
@@ -10,8 +10,12 @@ namespace HalogenUI
 
 		bool modified = false;
 
-		modified |= ImGui::DragInt("Resolution X", &ResX);
-		modified |= ImGui::DragInt("Resolution Y", &ResY);
+		int ResX = RayTracer.GetFramebufferWidth();
+		int ResY = RayTracer.GetFramebufferHeight();
+		ImGui::Text("Image");
+		modified |= ImGui::DragInt("Resolution X", &ResX, 1.0, 1, INT32_MAX);
+		modified |= ImGui::DragInt("Resolution Y", &ResY, 1.0, 1, INT32_MAX);
+		ImGui::Separator();
 
 		if (modified)
 		{
@@ -20,19 +24,30 @@ namespace HalogenUI
 			RayTracer.ResetAccumulation();
 		}
 
+		ImGui::Text("Light Paths");
+		modified |= ImGui::SliderInt("Max Bounces", &scene.m_MaxBounces, 0, 60);
+		ImGui::Separator();
+
+		ImGui::Text("World");
 		modified |= ImGui::SliderFloat("Sun Radius", &scene.m_SunRadius, 0.0f, 15.0f);
 		modified |= ImGui::SliderFloat("Sun Intensity", &scene.m_SunIntensity, 0.0f, 1000.0f);
 		modified |= ImGui::SliderFloat("Sun Altitude", &scene.m_SunAltitude, -90.0, 90.0);
 		modified |= ImGui::SliderFloat("Sun Azimuthal", &scene.m_SunAzimuthal, 0.0, 360.0);
 		modified |= ImGui::SliderFloat("Sky Variation", &scene.m_SkyVariation, 0.0f, 1.0f);
-		modified |= ImGui::SliderInt("Max Bounces", &scene.m_MaxBounces, 0, 60);
+		ImGui::Separator();
+
+		ImGui::Text("Camera");
 		modified |= ImGui::SliderFloat("Sensor Size", &scene.m_SensorSize, 35.0f, 150.0f);
 		modified |= ImGui::SliderFloat("Focal Length", &scene.m_FocalLength, 35.0f, 200.0f);
 		modified |= ImGui::SliderFloat("Focus Distance", &scene.m_FocusDist, 0.0f, 5.0f);
-		modified |= ImGui::SliderFloat("F-Stop", &scene.m_FStop, 0.0f, 2.0f);
+		modified |= ImGui::SliderFloat("F-Stop", &scene.m_FStop, 0.0f, 8.0f);
+		ImGui::Separator();
 
+		ImGui::Text("Post Processing");
 		ImGui::SliderFloat("Exposure", &scene.m_Exposure, 0.0, 3.0);
 		ImGui::SliderFloat("Gamma", &scene.m_Gamma, 0.0, 3.0);
+		ImGui::Separator();
+
 		RayTracer.Setting(PostProcess_Setting::Gamma, scene.m_Gamma);
 		RayTracer.Setting(PostProcess_Setting::Exposure, scene.m_Exposure);
 
@@ -67,18 +82,51 @@ namespace HalogenUI
 
 	void SceneSettings(RayTracer& RayTracer, Scene& scene)
 	{
-		ImGui::Begin("Scene Settings");
+		ImGui::Begin("Scene");
+
+		size_t MaterialCount = scene.m_MaterialMap.size();
+		std::string* Materials = new std::string[MaterialCount];
+		size_t i = 0;
+
+		for (auto& [name, material] : scene.m_MaterialMap)
+		{
+			Materials[i] = name;
+			i++;
+		}
 
 		ImGui::Text("Spheres");
 		for (auto& [name, sphere] : scene.m_SphereMap)
 		{
 			ImGui::PushID(name.c_str());
+
+			ImGui::Text(name.c_str());
+			const char* current = sphere.MaterialName.c_str();
+
+			if (ImGui::BeginCombo("Material", current))
+			{
+				for (size_t n = 0; n < MaterialCount; n++)
+				{
+					bool is_selected = (current == Materials[n]);
+					if (ImGui::Selectable(Materials[n].c_str(), is_selected))
+					{
+						sphere.MaterialName = Materials[n];
+						current = sphere.MaterialName.c_str();
+						RayTracer.SwapBufferObject(name, sphere);
+					}
+
+					if (is_selected)
+						ImGui::SetItemDefaultFocus();
+				}
+
+				ImGui::EndCombo();
+			}
+
 			bool modified = false;
 
 			if (name != "Ground")
 			{
-				ImGui::Text(name.c_str());
-				modified |= ImGui::SliderFloat("Radius", &sphere.Radius, 0.0f, 1.0f);
+				modified |= ImGui::DragFloat("Radius", &sphere.Radius, 0.05f, 0.0f, 100.0f);
+				modified |= ImGui::DragFloat3("Position", &sphere.Position.x, 0.1f);
 			}
 
 			if (modified)
@@ -110,7 +158,7 @@ namespace HalogenUI
 			else
 			{
 				modified |= ImGui::SliderFloat("Roughness", &material.Roughness, 0.0f, 1.0f);
-				modified |= ImGui::SliderFloat("Emission", &material.Emission, 0.0f, 30.0f);
+				modified |= ImGui::DragFloat("Emission", &material.Emission, 1.0f, 0.0, 1000.0f);
 			}
 
 			if (modified)

@@ -210,7 +210,7 @@ int main(int argc, char** argv)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(WindowWidth, WindowHeight, "Bombombini Windolini", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(WindowWidth, WindowHeight, "Halogen", NULL, NULL);
 	if (window == nullptr)
 		std::println("Could not initialize the window");
 
@@ -324,7 +324,7 @@ int main(int argc, char** argv)
 		ImGui::NewFrame();
 		ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
 
-		HalogenUI::RenderSettings(renderer, RayTracer, scene, io, SinceLastSceneSave, SinceLastRender, RenderResolutionX, RenderResolutionY);
+		HalogenUI::RenderSettings(renderer, RayTracer, scene, io, SinceLastSceneSave, SinceLastRender);
 		HalogenUI::SceneSettings(RayTracer, scene);
 		HalogenUI::MaterialSettings(RayTracer, scene);
 
