@@ -55,6 +55,8 @@ bool CtrlHeld = false;
 bool Save = false;
 bool SaveImage = false;
 
+float CloseHeld = 0;
+
 float Zoom = 1.0;
 
 Vec2 Shift;
@@ -65,14 +67,19 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	WindowWidth = width;
 	WindowHeight = height;
-	
 	Resized = true;
 }
 
 void ProcessInput(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, true);
+	{
+		Shift = Vec2(0.0);
+		Zoom = 1.0;
+
+		if (CloseHeld > 0.12)
+			glfwSetWindowShouldClose(window, true);
+	}
 
 	speed = 1.5;
 
@@ -148,6 +155,15 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 	if (key == GLFW_KEY_F11 && action == GLFW_PRESS)
 		SaveImage = true;
+
+	if (key == GLFW_KEY_ESCAPE)
+	{
+		if (action == GLFW_REPEAT)
+			CloseHeld += deltaTime;
+
+		else
+			CloseHeld = 0.0;
+	}
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
