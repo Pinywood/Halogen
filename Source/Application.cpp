@@ -10,6 +10,7 @@
 #include <gtc/type_ptr.hpp>
 
 #include "stb_image_write.h"
+#include "stb_image.h"
 
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
@@ -229,6 +230,11 @@ int main(int argc, char** argv)
 	GLFWwindow* window = glfwCreateWindow(WindowWidth, WindowHeight, "Halogen", NULL, NULL);
 	if (window == nullptr)
 		std::println("Could not initialize the window");
+
+	int iconChannels;
+	GLFWimage icon;
+	icon.pixels = stbi_load("res/Icon.png", &icon.width, &icon.height, &iconChannels, 0);
+	glfwSetWindowIcon(window, 1, &icon);
 
 	glfwMakeContextCurrent(window);
 

@@ -144,6 +144,7 @@
     <ClCompile Include="Source\Renderer.cpp" />
     <ClCompile Include="Source\Scene.cpp" />
     <ClCompile Include="Source\Shader.cpp" />
+    <ClCompile Include="Source\stb_image.cpp" />
     <ClCompile Include="Source\stb_image_write.cpp" />
     <ClCompile Include="Source\Tokenization.cpp" />
     <ClCompile Include="Source\VectorMath.cpp" />
@@ -159,6 +160,7 @@
     <ClCompile Include="Source\VertexBufferLayout.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="resource.h" />
     <ClInclude Include="Source\Camera.h" />
     <ClInclude Include="Source\Framebuffer.h" />
     <ClInclude Include="Source\HalogenUI.h" />
@@ -168,6 +170,7 @@
     <ClInclude Include="Source\Ray Tracer.h" />
     <ClInclude Include="Source\Renderer.h" />
     <ClInclude Include="Source\Shader.h" />
+    <ClInclude Include="Source\stb_image.h" />
     <ClInclude Include="Source\stb_image_write.h" />
     <ClInclude Include="Source\Tokenization.h" />
     <ClInclude Include="Source\VectorMath.h" />
@@ -197,6 +200,12 @@
     <None Include="res\Ray.glsl" />
     <None Include="res\Uniforms.glsl" />
     <None Include="res\Scene.hgns" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Halogen.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="HalogenIcon.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
