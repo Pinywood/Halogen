@@ -25,12 +25,12 @@ namespace HalogenUI
 		}
 
 		ImGui::Text("Light Paths");
-		modified |= ImGui::SliderInt("Max Bounces", &scene.m_MaxBounces, 0, 60);
+		modified |= ImGui::DragInt("Max Bounces", &scene.m_MaxBounces, 1.0, 0, INT32_MAX);
 		ImGui::Separator();
 
 		ImGui::Text("World");
 		modified |= ImGui::SliderFloat("Sun Radius", &scene.m_SunRadius, 0.0f, 15.0f);
-		modified |= ImGui::SliderFloat("Sun Intensity", &scene.m_SunIntensity, 0.0f, 1000.0f);
+		modified |= ImGui::SliderFloat("Sun Intensity", &scene.m_SunIntensity, 0.0f, 2000.0f);
 		modified |= ImGui::SliderFloat("Sun Altitude", &scene.m_SunAltitude, -90.0, 90.0);
 		modified |= ImGui::SliderFloat("Sun Azimuthal", &scene.m_SunAzimuthal, 0.0, 360.0);
 		modified |= ImGui::SliderFloat("Sky Variation", &scene.m_SkyVariation, 0.0f, 1.0f);
@@ -39,8 +39,8 @@ namespace HalogenUI
 		ImGui::Text("Camera");
 		modified |= ImGui::SliderFloat("Sensor Size", &scene.m_SensorSize, 35.0f, 150.0f);
 		modified |= ImGui::SliderFloat("Focal Length", &scene.m_FocalLength, 35.0f, 200.0f);
-		modified |= ImGui::SliderFloat("Focus Distance", &scene.m_FocusDist, 0.0f, 5.0f);
-		modified |= ImGui::SliderFloat("F-Stop", &scene.m_FStop, 0.0f, 8.0f);
+		modified |= ImGui::DragFloat("Focus Distance", &scene.m_FocusDist, 0.1f, 0.0f, 200.0f);
+		modified |= ImGui::DragFloat("F-Stop", &scene.m_FStop, 0.01f, 0.0f, 16.0f);
 		ImGui::Separator();
 
 		ImGui::Text("Post Processing");
@@ -153,7 +153,7 @@ namespace HalogenUI
 			modified |= ImGui::ColorEdit3("Albedo", &material.Albedo.x);
 
 			if (material.Type == BSDFType::Glass)
-				modified |= ImGui::SliderFloat("IOR", &material.IOR, 0.0f, 30.0f);
+				modified |= ImGui::DragFloat("IOR", &material.IOR, 0.01f, 0.0, 100.0);
 
 			else
 			{
