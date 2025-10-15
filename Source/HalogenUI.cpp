@@ -25,7 +25,12 @@ namespace HalogenUI
 		}
 
 		ImGui::Text("Light Paths");
-		modified |= ImGui::DragInt("Max Bounces", &scene.m_MaxBounces, 1.0, 0, INT32_MAX);
+		modified |= ImGui::DragInt("Max Depth", &scene.m_MaxDepth, 1.0, 0, INT32_MAX);
+		if (ImGui::Checkbox("Render Black Hole", &scene.RenderBlackHole))
+		{
+			RayTracer.SetRenderBlackHole(scene.RenderBlackHole);
+			RayTracer.ResetAccumulation();
+		}
 		ImGui::Separator();
 
 		ImGui::Text("World");
@@ -58,7 +63,7 @@ namespace HalogenUI
 			RayTracer.Setting(RT_Setting::Sun_Altitude, glm::radians(scene.m_SunAltitude));
 			RayTracer.Setting(RT_Setting::Sun_Azimuthal, glm::radians(scene.m_SunAzimuthal));
 			RayTracer.Setting(RT_Setting::Sky_Variation, scene.m_SkyVariation);
-			RayTracer.Setting(RT_Setting::Max_Bounces, scene.m_MaxBounces);
+			RayTracer.Setting(RT_Setting::Max_Depth, scene.m_MaxDepth);
 			RayTracer.Setting(RT_Setting::Sensor_Size, scene.m_SensorSize / 1000.0);
 			RayTracer.Setting(RT_Setting::Focal_Length, scene.m_FocalLength / 1000.0);
 			RayTracer.Setting(RT_Setting::Focus_Dist, scene.m_FocusDist);
@@ -134,6 +139,22 @@ namespace HalogenUI
 
 			ImGui::Separator();
 			ImGui::PopID();
+		}
+
+		if (scene.RenderBlackHole)
+		{
+			ImGui::Text("Black Hole");
+			if (ImGui::DragFloat3("Position", &scene.BlackHolePosition.x, 0.1f))
+			{
+				RayTracer.SetBlackHolePosition(scene.BlackHolePosition);
+				RayTracer.ResetAccumulation();
+			}
+
+			if (ImGui::DragFloat("Radius", &scene.SchwarzschildRadius, 0.01f, 0.0f, 100.0f))
+			{
+				RayTracer.SetBlackHoleRadius(scene.SchwarzschildRadius);
+				RayTracer.ResetAccumulation();
+			}
 		}
 
 		ImGui::End();

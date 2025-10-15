@@ -13,7 +13,7 @@ bool Scene::Load(const std::string& filepath)
 
 	enum class Target
 	{
-		None, Spheres, Settings, Camera, Materials
+		None, Spheres, Settings, Camera, Materials, BlackHole
 	};
 
 	if (!stream.is_open())
@@ -61,6 +61,13 @@ bool Scene::Load(const std::string& filepath)
 			getline(stream, line);
 		}
 
+		else if (line.find("BlackHole:") != std::string::npos)
+		{
+			target = Target::BlackHole;
+			LineNumber++;
+			getline(stream, line);
+		}
+
 		if (target == Target::Spheres && !ParseTargetSpheres(SphereTargetName, line, LineNumber, filepath))
 			success = false;
 
@@ -71,6 +78,9 @@ bool Scene::Load(const std::string& filepath)
 			success = false;
 
 		else if (target == Target::Camera && !ParseTargetCamera(line, LineNumber, filepath))
+			success = false;
+
+		else if (target == Target::BlackHole && !ParseTargetBlackHole(line, LineNumber, filepath))
 			success = false;
 	}
 
@@ -128,8 +138,13 @@ void Scene::Save(const std::string& filepath)
 		std::print(stream, "\n");
 	}
 
+	std::println(stream, "BlackHole:");
+	std::println(stream, "\tPosition = ({}, {}, {})", BlackHolePosition.x, BlackHolePosition.y, BlackHolePosition.z);
+	std::println(stream, "\tRadius = {}", SchwarzschildRadius);
+	std::print(stream, "\n");
+
 	std::println(stream, "Settings:");
-	std::println(stream, "\tMax_Bounces = {}", m_MaxBounces);
+	std::println(stream, "\tMax_Depth = {}", m_MaxDepth);
 	std::println(stream, "\tSun_Radius = {}", m_SunRadius);
 	std::println(stream, "\tSun_Intensity = {}", m_SunIntensity);
 	std::println(stream, "\tSun_Altitude = {}", m_SunAltitude);
@@ -140,6 +155,7 @@ void Scene::Save(const std::string& filepath)
 	std::println(stream, "\tFocus_Dist = {}", m_FocusDist);
 	std::println(stream, "\tF_Stop = {}", m_FStop);
 	std::println(stream, "\tExposure = {}", m_Exposure);
+	std::println(stream, "\tRenderBlackHole = {}", RenderBlackHole);
 }
 
 std::string Scene::GetSphereName(const std::string& line, const int& LineNumber, const std::string& filepath)
@@ -355,20 +371,22 @@ bool inline Scene::ParseTargetSettings(const std::string& line, const int& LineN
 		return false;
 
 	auto found = line.find("=");
+	std::string SettingName = GetToken(line, "=");
 
-	char c;
-	std::string SettingName;
-	for (int i = 0; i < found; i++)
+	if (SettingName == "RenderBlackHole")
 	{
-		c = line.at(i);
-		if (isalnum(c) || c == '_')
-			SettingName.push_back(c);
+		bool value = false;
+		if (GetToken(line, found + 1) == "true")
+			value = true;
+		Setting(Scene_Setting::RenderBlackHole, value);
+		return true;
 	}
 
 	if (line.find("(") == std::string::npos && line.find(",") == std::string::npos)
 	{
 		float value = std::stof(line.substr(found + 1));
 		Setting(SettingMap.at(SettingName), value);
+		return true;
 	}
 
 	else
@@ -419,6 +437,43 @@ bool inline Scene::ParseTargetCamera(const std::string& line, const int& LineNum
 		Position.z = std::stof(line.substr(found));
 
 		m_Camera.m_Position = glm::vec3(Position.x, Position.y, Position.z);
+	}
+
+	return true;
+}
+
+bool Scene::ParseTargetBlackHole(const std::string& line, const int& LineNumber, const std::string& filepath)
+{
+	if (TokenPresent(line, "Position"))
+	{
+		if (!EqualPresent(line, LineNumber, filepath))
+			return false;
+
+		if (!LeftParenPresent(line, LineNumber, filepath))
+			return false;
+		auto found = line.find("(");
+
+		Vec3 Position;
+
+		found += 1;
+		Position.x = std::stof(line.substr(found));
+
+		found = line.find(",") + 1;
+		Position.y = std::stof(line.substr(found));
+
+		found = line.find(",", found + 1) + 1;
+		Position.z = std::stof(line.substr(found));
+
+		BlackHolePosition = Vec3(Position.x, Position.y, Position.z);
+	}
+
+	else if (TokenPresent(line, "Radius"))
+	{
+		if (!EqualPresent(line, LineNumber, filepath))
+			return false;
+
+		auto found = line.find("=");
+		SchwarzschildRadius = std::stof(line.substr(found + 1));
 	}
 
 	return true;

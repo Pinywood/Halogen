@@ -44,7 +44,7 @@ RayTracer::~RayTracer()
 
 void RayTracer::SetDefaultSettings()
 {
-	int max_bounces = 30;
+	int max_depth = 60;
 	float Sensor_Size = 100.0;
 	float Focal_Length = 35.0;
 	float Focus_Dist = 1.0;
@@ -64,7 +64,7 @@ void RayTracer::SetDefaultSettings()
 	Setting(RT_Setting::Sun_Altitude, glm::radians(SunAltitude));
 	Setting(RT_Setting::Sun_Azimuthal, glm::radians(SunAzimuthal));
 	Setting(RT_Setting::Sky_Variation, SkyVariation);
-	Setting(RT_Setting::Max_Bounces, max_bounces);
+	Setting(RT_Setting::Max_Depth, max_depth);
 	Setting(RT_Setting::Sensor_Size, Sensor_Size / 1000.0);
 	Setting(RT_Setting::Focal_Length, Focal_Length / 1000.0);
 	Setting(RT_Setting::Focus_Dist, Focus_Dist);
@@ -357,6 +357,24 @@ int RayTracer::GetFramebufferHeight() const
 	return m_FramebufferHeight;
 }
 
+void RayTracer::SetRenderBlackHole(const bool& value)
+{
+	m_RTShader.AddToLookUp("RenderBlackHole", value);
+	m_RTShader.ReCompile();
+	UploadMaterials();
+	UploadSpheres();
+}
+
+void RayTracer::SetBlackHolePosition(const Vec3& value)
+{
+	m_RTShader.SetUniform("BlackHolePosition", value);
+}
+
+void RayTracer::SetBlackHoleRadius(const float& value)
+{
+	m_RTShader.SetUniform("SchwarzsRadius", value);
+}
+
 void RayTracer::SetCameraPosition(const glm::vec3& Position)
 {
 	m_Camera.m_Position = Position;
@@ -393,13 +411,16 @@ void RayTracer::LoadScene(const Scene& scene)
 	Setting(RT_Setting::Sun_Altitude, glm::radians(scene.m_SunAltitude));
 	Setting(RT_Setting::Sun_Azimuthal, glm::radians(scene.m_SunAzimuthal));
 	Setting(RT_Setting::Sky_Variation, scene.m_SkyVariation);
-	Setting(RT_Setting::Max_Bounces, scene.m_MaxBounces);
+	Setting(RT_Setting::Max_Depth, scene.m_MaxDepth);
 	Setting(RT_Setting::Sensor_Size, scene.m_SensorSize / 1000.0);
 	Setting(RT_Setting::Focal_Length, scene.m_FocalLength / 1000.0);
 	Setting(RT_Setting::Focus_Dist, scene.m_FocusDist);
 	Setting(RT_Setting::F_Stop, scene.m_FStop);
 	Setting(PostProcess_Setting::Gamma, scene.m_Gamma);
 	Setting(PostProcess_Setting::Exposure, scene.m_Exposure);
+	SetRenderBlackHole(scene.RenderBlackHole);
+	SetBlackHolePosition(scene.BlackHolePosition);
+	SetBlackHoleRadius(scene.SchwarzschildRadius);
 
 	ClearBuffer();
 	ClearMaterials();

@@ -7,6 +7,8 @@ in vec3 WorldX;
 in vec3 WorldY;
 in vec3 WorldZ;
 
+const bool RenderBlackHole = true;
+
 struct Ray
 {
 	vec3 RayOrigin;
@@ -19,6 +21,23 @@ struct HitRecord
 	bool Hit;
 	float t;
 	Sphere HitSphere;
+};
+
+struct BlackHoleInfo
+{
+	vec3 BlackHolePos;
+	float SchwarzschildRadius;
+	float PSphereRadius;
+	vec3 Radial;
+	float r;
+	vec3 UnitRadial;
+	vec3 Omega;
+	float rVel;
+	float k;
+	float PhiVel;
+	float rAcc;
+	bool Escaped;
+	float dt;
 };
 
 void WorldColor(in vec3 direction, out vec4 color)
@@ -224,6 +243,21 @@ void UpdateRay(inout Ray ray, HitRecord record, in float seed)
 	}
 }
 
+void UpdateRay(inout Ray ray, inout BlackHoleInfo BHInfo)
+{
+	BHInfo.Radial += ray.RayDir * BHInfo.dt;
+	BHInfo.r = length(BHInfo.Radial);
+	BHInfo.UnitRadial = BHInfo.Radial / BHInfo.r;
+
+	BHInfo.rVel = (BHInfo.rAcc * BHInfo.dt + BHInfo.rVel);
+	BHInfo.PhiVel = BHInfo.k / (BHInfo.r * BHInfo.r);
+	ray.RayDir = BHInfo.rVel * BHInfo.UnitRadial + BHInfo.r * BHInfo.PhiVel * normalize(cross(BHInfo.Omega, BHInfo.Radial));
+	ray.RayDir = normalize(ray.RayDir);
+	ray.RayOrigin = BHInfo.Radial + BHInfo.BlackHolePos;
+	BHInfo.rAcc = (BHInfo.r - BHInfo.PSphereRadius) * BHInfo.PhiVel * BHInfo.PhiVel;
+	BHInfo.Escaped = (BHInfo.rVel > 0.0) && (BHInfo.r > BHInfo.SchwarzschildRadius);
+}
+
 Ray GetRay(vec3 PixelPos, float seed)
 {
 	Ray ray;
@@ -250,13 +284,44 @@ Ray GetRay(vec3 PixelPos, float seed)
 	return ray;
 }
 
-vec3 TraceRay(in Ray ray, in Sphere Models[ModelCount], in int max_bounces, in float seed)
+//Compute BlackHoleInfo from Initial Ray
+BlackHoleInfo ComputeBlackHoleInfo(Ray ray)
+{
+	BlackHoleInfo BHInfo;
+	BHInfo.BlackHolePos = BlackHolePosition;
+	BHInfo.BlackHolePos -= CameraPos;
+	BHInfo.BlackHolePos = View * BHInfo.BlackHolePos;
+	BHInfo.SchwarzschildRadius = SchwarzsRadius;
+	BHInfo.PSphereRadius = BHInfo.SchwarzschildRadius * 3.0 / 2.0;
+
+	BHInfo.Radial = ray.RayOrigin - BHInfo.BlackHolePos;
+	BHInfo.r = length(BHInfo.Radial);
+	BHInfo.UnitRadial = BHInfo.Radial / BHInfo.r;
+	BHInfo.Omega = cross(BHInfo.Radial, ray.RayDir);
+	BHInfo.rVel = dot(ray.RayDir, BHInfo.UnitRadial);
+	BHInfo.k = BHInfo.r * length(ray.RayDir - BHInfo.rVel * BHInfo.UnitRadial);
+	BHInfo.PhiVel = BHInfo.k / (BHInfo.r * BHInfo.r);
+	BHInfo.rAcc = (BHInfo.r - BHInfo.PSphereRadius) * BHInfo.PhiVel;
+	BHInfo.Escaped = (BHInfo.rVel > 0.0) && (BHInfo.r > BHInfo.SchwarzschildRadius);
+	BHInfo.dt = 0.01;
+
+	return BHInfo;
+}
+
+vec3 TraceRay(in Ray ray, in Sphere Models[ModelCount], in int max_depth, in float seed)
 {
 	ray = GetRay(ray.RayOrigin, seed);
+	BlackHoleInfo BHInfo = ComputeBlackHoleInfo(ray);
 
-	for(int bounces = 0; bounces < max_bounces; bounces++)
+	for(int depth = 0; depth < max_depth; depth++)
 	{
 		HitRecord record = HitPoint(ray, Models);
+
+		if(record.t > 2.0 * BHInfo.dt && !BHInfo.Escaped && RenderBlackHole)
+		{
+			UpdateRay(ray, BHInfo);
+			continue;
+		}
 
 		if(!record.Hit)
 		{
@@ -275,6 +340,9 @@ vec3 TraceRay(in Ray ray, in Sphere Models[ModelCount], in int max_bounces, in f
 		}
 
 		UpdateRay(ray, record, seed);
+
+		if(RenderBlackHole)
+			BHInfo = ComputeBlackHoleInfo(ray);
 	}
 
 	return vec3(0.0);

@@ -14,18 +14,20 @@
 #include "Model.h"
 #include "Camera.h"
 #include "Tokenization.h"
+#include "VectorMath.h"
 
 enum class Scene_Setting
 {
-	Max_Bounces,
+	Max_Depth,
 	Sun_Radius, Sun_Intensity, Sun_Altitude, Sun_Azimuthal, Sky_Variation,
 	Sensor_Size, Focal_Length, Focus_Dist, F_Stop,
-	Gamma, Exposure
+	Gamma, Exposure,
+	RenderBlackHole
 };
 
 const std::unordered_map<std::string, Scene_Setting> SettingMap =
 {
-	std::pair("Max_Bounces", Scene_Setting::Max_Bounces),
+	std::pair("Max_Depth", Scene_Setting::Max_Depth),
 	std::pair("Sun_Radius", Scene_Setting::Sun_Radius),
 	std::pair("Sun_Intensity", Scene_Setting::Sun_Intensity),
 	std::pair("Sun_Altitude", Scene_Setting::Sun_Altitude),
@@ -36,7 +38,8 @@ const std::unordered_map<std::string, Scene_Setting> SettingMap =
 	std::pair("Focus_Dist", Scene_Setting::Focus_Dist),
 	std::pair("F_Stop", Scene_Setting::F_Stop),
 	std::pair("Gamma", Scene_Setting::Gamma),
-	std::pair("Exposure", Scene_Setting::Exposure)
+	std::pair("Exposure", Scene_Setting::Exposure),
+	std::pair("RenderBlackHole", Scene_Setting::RenderBlackHole)
 };
 
 static bool EqualPresent(const std::string& string, const int& Line, const std::string& filepath)
@@ -60,7 +63,7 @@ static bool LeftParenPresent(const std::string& string, const int& Line, const s
 class Scene
 {
 public:
-	int m_MaxBounces = 30;
+	int m_MaxDepth = 30;
 
 	float m_SensorSize = 100.0;
 	float m_FocalLength = 35.0;
@@ -75,6 +78,10 @@ public:
 
 	float m_Gamma = 2.2;
 	float m_Exposure = 1.5;
+
+	bool RenderBlackHole = false;
+	Vec3 BlackHolePosition = Vec3(0.0);
+	float SchwarzschildRadius = 1.0;
 
 	std::map<std::string, Sphere> m_SphereMap;
 	std::map<std::string, Material> m_MaterialMap;
@@ -97,6 +104,7 @@ private:
 	bool ParseTargetMaterials(std::string& TargetName, const std::string& line, const int& LineNumber, const std::string& filepath);
 	bool ParseTargetSettings(const std::string& line, const int& LineNumber, const std::string& filepath);
 	bool ParseTargetCamera(const std::string& line, const int& LineNumber, const std::string& filepath);
+	bool ParseTargetBlackHole(const std::string& line, const int& LineNumber, const std::string& filepath);
 
 	template<typename T>
 	void Setting(const Scene_Setting& Setting, const T& value);
@@ -107,8 +115,8 @@ void Scene::Setting(const Scene_Setting& Setting, const T& value)
 {
 	switch (Setting)
 	{
-		case Scene_Setting::Max_Bounces:
-			m_MaxBounces = value;
+		case Scene_Setting::Max_Depth:
+			m_MaxDepth = value;
 			break;
 
 		case Scene_Setting::Sun_Radius:
@@ -153,6 +161,10 @@ void Scene::Setting(const Scene_Setting& Setting, const T& value)
 
 		case Scene_Setting::Exposure:
 			m_Exposure = value;
+			break;
+
+		case Scene_Setting::RenderBlackHole:
+			RenderBlackHole = value;
 			break;
 	}
 }

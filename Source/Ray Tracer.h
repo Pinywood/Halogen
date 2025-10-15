@@ -17,7 +17,7 @@
 
 enum class RT_Setting
 {
-	Max_Bounces,
+	Max_Depth,
 	Sun_Radius, Sun_Intensity, Sun_Altitude, Sun_Azimuthal, Sky_Variation,
 	Sensor_Size, Focal_Length, Focus_Dist, F_Stop
 };
@@ -32,8 +32,8 @@ struct std::formatter<RT_Setting> : std::formatter<std::string>
 {
 	auto format(const RT_Setting& Setting, format_context& ctx) const
 	{
-		if(Setting == RT_Setting::Max_Bounces)
-			return std::formatter<std::string>::format(std::format("{}", "Max_Bounces"), ctx);
+		if(Setting == RT_Setting::Max_Depth)
+			return std::formatter<std::string>::format(std::format("{}", "Max_Depth"), ctx);
 
 		if (Setting == RT_Setting::Sun_Radius)
 			return std::formatter<std::string>::format(std::format("{}", "Sun_Radius"), ctx);
@@ -85,7 +85,7 @@ struct std::formatter<PostProcess_Setting> : std::formatter<std::string>
 
 static const std::unordered_map<RT_Setting, std::string> SettingUniformMap =
 {
-	std::pair(RT_Setting::Max_Bounces, "max_bounces"),
+	std::pair(RT_Setting::Max_Depth, "max_depth"),
 	std::pair(RT_Setting::Sun_Radius, "SunRadius"),
 	std::pair(RT_Setting::Sun_Intensity, "SunIntensity"),
 	std::pair(RT_Setting::Sun_Altitude, "SunAltitude"),
@@ -121,6 +121,10 @@ public:
 	unsigned int RenderedSamples() const;
 	int GetFramebufferWidth() const;
 	int GetFramebufferHeight() const;
+
+	void SetRenderBlackHole(const bool& value);
+	void SetBlackHolePosition(const Vec3& value);
+	void SetBlackHoleRadius(const float& value);
 
 	void AddToBuffer(const std::string& name, const Sphere& Sphere);
 	void SwapBufferObject(const std::string& name, const Sphere& Sphere);

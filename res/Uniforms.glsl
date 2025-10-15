@@ -5,7 +5,7 @@ uniform float Focus_Dist;
 uniform float F_Stop;
 
 uniform int CurrentSample;
-uniform int max_bounces;
+uniform int max_depth;
 uniform int FramebufferWidth;
 uniform int FramebufferHeight;
 uniform float AspectRatio;
@@ -14,6 +14,9 @@ const int ModelCount = 1;
 uniform Sphere SphereList[ModelCount];
 const int MaterialCount = 1;
 uniform Material MaterialList[MaterialCount];
+
+uniform vec3 BlackHolePosition;
+uniform float SchwarzsRadius;
 
 uniform float SunRadius;										//Should be in [0, 1], it is the cos of the angular radius
 uniform float SunIntensity;

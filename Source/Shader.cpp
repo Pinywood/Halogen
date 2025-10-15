@@ -260,6 +260,15 @@ void Shader::AddToLookUp(const std::string name, const double& value)
 	m_ConstantLookUpMap[name] = std::to_string(value);
 }
 
+void Shader::AddToLookUp(const std::string name, const bool& value)
+{
+	if(value)
+		m_ConstantLookUpMap[name] = "true";
+
+	else
+		m_ConstantLookUpMap[name] = "false";
+}
+
 std::tuple<std::string, std::string> Shader::ParseShader(const std::string& ShaderCode)
 {
 	enum class ShaderType

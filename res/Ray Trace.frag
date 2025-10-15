@@ -22,7 +22,7 @@ void main()
 	TracingRay.RayOrigin = pixel_Position;
 	TracingRay.RayColor = vec3(1.0, 1.0, 1.0);
 
-	vec3 color = TraceRay(TracingRay, Spheres, max_bounces, float(CurrentSample));
+	vec3 color = TraceRay(TracingRay, Spheres, max_depth, float(CurrentSample));
 	vec4 colorOut = vec4(color, 1.0);
 	FragmentColor = colorOut;
 }

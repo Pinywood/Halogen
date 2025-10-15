@@ -143,6 +143,7 @@ public:
 	void AddToLookUp(const std::string name, const size_t& value);
 	void AddToLookUp(const std::string name, const float& value);
 	void AddToLookUp(const std::string name, const double& value);
+	void AddToLookUp(const std::string name, const bool& value);
 
 private:
 	std::tuple<std::string, std::string> ParseShader(const std::string& ShaderCode);

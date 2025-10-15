@@ -63,8 +63,12 @@ Spheres:
 					Radius = 1
 					Material = "Metal"
 
+BlackHole:
+	Position = (0, 2, 0)
+	Radius = 0.5
+
 Settings:
-	Max_Bounces = 60
+	Max_Depth = 60
 	Sun_Radius = 0.432
 	Sun_Intensity = 1000
 	Sun_Altitude = 16.154
@@ -75,3 +79,4 @@ Settings:
 	Focus_Dist = 4.559
 	F_Stop = 0.256
 	Exposure = 1.351
+	RenderBlackHole = false
