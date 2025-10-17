@@ -31,6 +31,20 @@ namespace HalogenUI
 			RayTracer.SetRenderBlackHole(scene.RenderBlackHole);
 			RayTracer.ResetAccumulation();
 		}
+
+		if (scene.RenderBlackHole)
+		{
+			if (ImGui::DragFloat("Step Size", &scene.LightPathStepSize, 0.001f, 0.0001f, 10.0f))
+			{
+				RayTracer.SetLightPathStepSize(scene.LightPathStepSize);
+				RayTracer.ResetAccumulation();
+			}
+			if (ImGui::DragFloat("Influence Radius", &scene.MaxInfluenceRadius, 0.1f, 0.0, 100.0f))
+			{
+				RayTracer.SetMaxInfluenceRadius(scene.MaxInfluenceRadius);
+				RayTracer.ResetAccumulation();
+			}
+		}
 		ImGui::Separator();
 
 		ImGui::Text("World");
@@ -150,7 +164,7 @@ namespace HalogenUI
 				RayTracer.ResetAccumulation();
 			}
 
-			if (ImGui::DragFloat("Radius", &scene.SchwarzschildRadius, 0.01f, 0.0f, 100.0f))
+			if (ImGui::DragFloat("Schwarzschild radius", &scene.SchwarzschildRadius, 0.01f, 0.0f, 100.0f))
 			{
 				RayTracer.SetBlackHoleRadius(scene.SchwarzschildRadius);
 				RayTracer.ResetAccumulation();

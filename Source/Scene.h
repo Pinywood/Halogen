@@ -82,6 +82,8 @@ public:
 	bool RenderBlackHole = false;
 	Vec3 BlackHolePosition = Vec3(0.0);
 	float SchwarzschildRadius = 1.0;
+	float LightPathStepSize = 0.03;
+	float MaxInfluenceRadius = 10.0;
 
 	std::map<std::string, Sphere> m_SphereMap;
 	std::map<std::string, Material> m_MaterialMap;

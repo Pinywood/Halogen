@@ -142,6 +142,8 @@ void Scene::Save(const std::string& filepath)
 	std::println(stream, "\tPosition = ({}, {}, {})", BlackHolePosition.x, BlackHolePosition.y, BlackHolePosition.z);
 	std::println(stream, "\tRadius = {}", SchwarzschildRadius);
 	std::print(stream, "\n");
+	std::println(stream, "\tMaxInfluenceRadius = {}", MaxInfluenceRadius);
+	std::println(stream, "\tStepSize = {}", LightPathStepSize);
 
 	std::println(stream, "Settings:");
 	std::println(stream, "\tMax_Depth = {}", m_MaxDepth);
@@ -467,13 +469,31 @@ bool Scene::ParseTargetBlackHole(const std::string& line, const int& LineNumber,
 		BlackHolePosition = Vec3(Position.x, Position.y, Position.z);
 	}
 
-	else if (TokenPresent(line, "Radius"))
+	else if (GetToken(line, "=") == "Radius")
 	{
 		if (!EqualPresent(line, LineNumber, filepath))
 			return false;
 
 		auto found = line.find("=");
 		SchwarzschildRadius = std::stof(line.substr(found + 1));
+	}
+
+	else if (GetToken(line, "=") == "StepSize")
+	{
+		if (!EqualPresent(line, LineNumber, filepath))
+			return false;
+
+		auto found = line.find("=");
+		LightPathStepSize = std::stof(line.substr(found + 1));
+	}
+
+	else if (GetToken(line, "=") == "MaxInfluenceRadius")
+	{
+		if (!EqualPresent(line, LineNumber, filepath))
+			return false;
+
+		auto found = line.find("=");
+		MaxInfluenceRadius = std::stof(line.substr(found + 1));
 	}
 
 	return true;

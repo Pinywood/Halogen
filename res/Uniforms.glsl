@@ -17,6 +17,8 @@ uniform Material MaterialList[MaterialCount];
 
 uniform vec3 BlackHolePosition;
 uniform float SchwarzsRadius;
+uniform float MaxInfluenceRadius;
+uniform float StepSize;
 
 uniform float SunRadius;										//Should be in [0, 1], it is the cos of the angular radius
 uniform float SunIntensity;

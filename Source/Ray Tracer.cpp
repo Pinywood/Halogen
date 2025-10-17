@@ -375,6 +375,16 @@ void RayTracer::SetBlackHoleRadius(const float& value)
 	m_RTShader.SetUniform("SchwarzsRadius", value);
 }
 
+void RayTracer::SetMaxInfluenceRadius(const float& value)
+{
+	m_RTShader.SetUniform("MaxInfluenceRadius", value);
+}
+
+void RayTracer::SetLightPathStepSize(const float& value)
+{
+	m_RTShader.SetUniform("StepSize", value);
+}
+
 void RayTracer::SetCameraPosition(const glm::vec3& Position)
 {
 	m_Camera.m_Position = Position;
@@ -421,6 +431,8 @@ void RayTracer::LoadScene(const Scene& scene)
 	SetRenderBlackHole(scene.RenderBlackHole);
 	SetBlackHolePosition(scene.BlackHolePosition);
 	SetBlackHoleRadius(scene.SchwarzschildRadius);
+	SetMaxInfluenceRadius(scene.MaxInfluenceRadius);
+	SetLightPathStepSize(scene.LightPathStepSize);
 
 	ClearBuffer();
 	ClearMaterials();

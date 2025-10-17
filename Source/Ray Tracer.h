@@ -125,6 +125,8 @@ public:
 	void SetRenderBlackHole(const bool& value);
 	void SetBlackHolePosition(const Vec3& value);
 	void SetBlackHoleRadius(const float& value);
+	void SetMaxInfluenceRadius(const float& value);
+	void SetLightPathStepSize(const float& value);
 
 	void AddToBuffer(const std::string& name, const Sphere& Sphere);
 	void SwapBufferObject(const std::string& name, const Sphere& Sphere);
